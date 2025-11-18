@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>¿Eliminar Pregunta Padre?</h2>
+<p>Texto: <strong>{{ pregunta.texto }}</strong></p>
+<p>Categoría: {{ pregunta.categoria }}</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Confirmar</button>
+</form>
+<a href="{% url 'lista_preguntas_padre' %}">Cancelar</a>
+{% endblock %}

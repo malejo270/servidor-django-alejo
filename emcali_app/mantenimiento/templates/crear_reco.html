@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+    <!-- Botón de volver -->
+    <div style="margin-bottom: 10px;">
+        <a href="{% url 'vista_general_recos' %}" style="background-color: #ffcc00; color: #000; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            ← Volver
+        </a>
+    </div>
+
+    <!-- Bloque de mensajes -->
+    {% if messages %}
+    <div style="margin-bottom: 20px;">
+        {% for message in messages %}
+            {% if message.tags == 'error' %}
+                <div style="padding: 10px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 4px;">
+                    {{ message }}
+                </div>
+            {% else %}
+                <div style="padding: 10px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 4px;">
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Formulario de Reconectador -->
+    <div style="background: #fff; padding: 30px 40px; border-left: 6px solid #ffcc00; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+        <h2 style="color: #d00000; text-align: center; margin-bottom: 30px;">Registrar Reconectador</h2>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">Activo:</label>
+                <input type="number" name="activo" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">SN Activo:</label>
+                <input type="text" name="sn_activo" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">N° Equipo:</label>
+                <input type="text" name="n_equipo" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <!-- 📸 Imagen -->
+            <div style="margin-bottom: 20px; text-align: center;">
+                {% if reco and reco.foto %}
+                    <img src="{{ reco.foto.url }}" alt="Foto del reconectador" style="max-width: 250px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px;">
+                {% endif %}
+                <input type="file" name="foto" style="width: 100%; padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <!-- Selección de Nodo -->
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">Nodo:</label>
+                <input list="lista-nodos" name="nodo" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;" required>
+                <datalist id="lista-nodos">
+                    {% for nodo in nodos %}
+                        <option value="{{ nodo.nodo }}">
+                    {% endfor %}
+                </datalist>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">Serial:</label>
+                <input type="text" name="serial" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">Modelo:</label>
+                <input type="text" name="modelo" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">Fecha Instalación:</label>
+                <input type="date" name="fecha_instalacion" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">Responsable:</label>
+                <input type="text" name="responsable" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">Marca:</label>
+                <input type="text" name="marca" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: bold;">Estado:</label>
+                <input type="text" name="estado" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <div style="margin-bottom: 30px;">
+                <label style="font-weight: bold;">Icc:</label>
+                <input type="text" name="Icc" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+            </div>
+
+            <button type="submit" style="width: 100%; background-color: #d00000; color: white; padding: 12px; font-weight: bold; border: none; border-radius: 5px; font-size: 16px;">
+                Guardar Reconectador
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

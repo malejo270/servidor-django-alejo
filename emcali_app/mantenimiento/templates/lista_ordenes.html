@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container my-5">
+
+  <!-- 🔹 MENSAJES DE DJANGO -->
+  {% if messages %}
+    <div id="mensajes-django" class="mb-4">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} fw-bold fade show" role="alert">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- 🔹 BOTONES SUPERIORES -->
+  <div class="d-flex flex-wrap justify-content-center justify-content-md-end gap-2 mb-4">
+    <a href="{% url 'reporte_emergencia' %}" class="btn btn-danger fw-bold shadow-sm text-nowrap">
+      🚨 Reporte de Emergencia
+    </a>
+   
+  </div>
+
+  <!-- 🔹 TÍTULO -->
+  
+
+  <!-- 🔹 BOTÓN FILTROS -->
+  <div class="text-center mb-3">
+    <button type="button" class="btn btn-outline-secondary fw-bold" onclick="toggleFiltros()">
+      🛠️ Filtros
+    </button>
+<h2 class="text-center text-danger fw-bold mb-2 mt-3">Órdenes Creadas</h2>
+    <!-- FILTROS -->
+    <div id="filtrosBox" class="bg-white border rounded-3 shadow p-3 mt-3">
+      <form method="get" class="d-flex flex-column gap-3">
+
+        <!-- Orden -->
+        <div>
+          <label for="orden" class="fw-bold">Ordenar por subestación:</label>
+          <select name="orden" id="orden" class="form-select mt-1" onchange="this.form.submit()">
+            <option value="az" {% if request.GET.orden == "az" or not request.GET.orden %}selected{% endif %}>A - Z</option>
+            <option value="za" {% if request.GET.orden == "za" %}selected{% endif %}>Z - A</option>
+          </select>
+        </div>
+
+        <!-- Tipo -->
+        <div>
+          <label for="tipo" class="fw-bold">Filtrar por tipo:</label>
+          <select name="tipo" id="tipo" class="form-select mt-1" onchange="this.form.submit()">
+            <option value="" {% if not tipo_param %}selected{% endif %}>Todos</option>
+            <option value="reco" {% if tipo_param == "reco" %}selected{% endif %}>Reconectador</option>
+            <option value="subestacion" {% if tipo_param == "subestacion" %}selected{% endif %}>Subestación</option>
+          </select>
+        </div>
+
+        <!-- Fechas -->
+        <div>
+          <label for="fecha_inicio" class="fw-bold">Desde</label>
+          <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}" class="form-control mt-1">
+        </div>
+        <div>
+          <label for="fecha_fin" class="fw-bold">Hasta</label>
+          <input type="date" name="fecha_fin" value="{{ fecha_fin }}" class="form-control mt-1">
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-success w-50 fw-bold">Filtrar</button>
+          <a href="{% url 'lista_ordenes' %}" class="btn btn-outline-primary w-50 fw-bold">Limpiar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 🔹 LISTADO DE ÓRDENES -->
+  {% for item in ordenes %}
+    {% with o=item.orden informe=item.informe puede_editar=item.puede_editar %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body border-start border-5 border-danger rounded-2">
+
+          <div class="row g-3">
+            <!-- Información -->
+            <div class="col-12 col-md-7">
+              <p><strong>N° Orden:</strong> {{ o.n_orden }}</p>
+
+              {% if o.tipo == "reco" %}
+                <p><strong>Nodo:</strong> {{ o.id_nodo.nodo|default:"—" }}</p>
+                <p><strong>Subestación:</strong> {{ o.id_nodo.id_subestacion.nombre|default:"—" }}</p>
+                <p><strong>Ubicación:</strong> {{ o.id_nodo.direccion|default:"—" }}</p>
+                <p><strong>Reconectador:</strong>
+                  {% if o.id_nodo %}
+                    {% with reco=o.id_nodo.reconectador_set.first %}
+                      {{ reco.n_equipo|default:"—" }}
+                    {% endwith %}
+                  {% else %}—{% endif %}
+                </p>
+              {% elif o.tipo == "subestacion" %}
+                <p><strong>Subestación:</strong> {{ o.id_subestacion.nombre|default:"—" }}</p>
+                <p><strong>Ubicación:</strong> {{ o.id_subestacion.ubicacion|default:"—" }}</p>
+              {% endif %}
+
+              <p><strong>Descripción:</strong> {{ o.descripcion }}</p>
+              <p><strong>Fecha:</strong> {{ o.fecha }}</p>
+              <p><strong>Estado:</strong> {{ o.get_estado_orden_display }}</p>
+            </div>
+
+            <!-- Botones -->
+            <div class="col-12 col-md-5 d-flex flex-column align-items-stretch gap-2">
+
+              {% if not informe %}
+                {% if o.tipo == "reco" %}
+                  <a href="{% url 'crear_informe_reco' o.id %}" class="btn btn-success fw-bold shadow-sm w-100">
+                    ✅ Completar Informe
+                  </a>
+                {% elif o.tipo == "subestacion" %}
+                  <a href="{% url 'crear_informe_subestacion' o.id %}" class="btn btn-success fw-bold shadow-sm w-100">
+                    ✅ Completar Informe Subestación
+                  </a>
+                {% endif %}
+              {% elif puede_editar %}
+                {% if o.tipo == "reco" %}
+                  <a href="{% url 'crear_informe_reco' o.id %}" class="btn btn-primary fw-bold shadow-sm w-100">
+                    ✏️ Editar Informe
+                  </a>
+                {% elif o.tipo == "subestacion" %}
+                  <a href="{% url 'crear_informe_subestacion' o.id %}" class="btn btn-primary fw-bold shadow-sm w-100">
+                    ✏️ Editar Informe Subestación
+                  </a>
+                {% endif %}
+              {% else %}
+                <span class="btn btn-light text-dark fw-bold shadow-sm disabled w-100">
+                  ☑️ Completado
+                </span>
+              {% endif %}
+
+              {% if o.tipo == "reco" and o.id_nodo %}
+                <a href="{% url 'detalle_nodo_reco_comunicacion' o.id_nodo.id_nodo %}" class="btn btn-dark fw-bold shadow-sm w-100">
+                  📄 Info Reco
+                </a>
+
+                {% with comunicacion=o.id_nodo.reconectador_set.first.comunicacion_set.first %}
+                  {% if comunicacion %}
+                    <a href="{% url 'historico_trabajos' comunicacion.id_comunicacion %}" class="btn btn-primary fw-bold shadow-sm w-100">
+                      📜 Histórico
+                    </a>
+                  {% else %}
+                    <span class="btn btn-outline-secondary fw-bold shadow-sm disabled w-100">
+                      📜 Sin histórico
+                    </span>
+                  {% endif %}
+                {% endwith %}
+              {% endif %}
+
+              {% if o.tipo == "subestacion" and o.id_subestacion %}
+                <a href="{% url 'historico_sub_comu' o.id_subestacion.id %}?from={{ request.resolver_match.url_name }}"
+                   class="btn btn-primary fw-bold shadow-sm w-100">
+                  📜 Histórico Comunicación Subestación
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endwith %}
+  {% empty %}
+    <p class="text-center text-muted">No hay órdenes registradas.</p>
+  {% endfor %}
+</div>
+
+<!-- 🔹 ESTILOS Y SCRIPT -->
+<style>
+/* 🚫 Evita scroll lateral completamente */
+html, body {
+  width: 100%;
+  overflow-x: hidden !important;
+}
+
+/* 🔸 Asegura que el contenedor nunca desborde */
+.container {
+  max-width: 100%;
+  padding-left: 15px;
+  padding-right: 15px;
+  box-sizing: border-box;
+}
+
+/* Cuadro de filtros centrado */
+#filtrosBox {
+  position: static;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  display: none;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+#filtrosBox.show {
+  display: block !important;
+  animation: fadeIn 0.3s ease;
+}
+
+/* Animación */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ajustes móviles */
+@media (max-width: 768px) {
+  #filtrosBox {
+    width: 100%;
+  }
+  .btn-outline-secondary {
+    width: 100%;
+  }
+}
+</style>
+
+<script>
+function toggleFiltros() {
+  const filtros = document.getElementById('filtrosBox');
+  filtros.classList.toggle('show');
+}
+
+// Ocultar mensajes automáticamente
+window.addEventListener('DOMContentLoaded', () => {
+  const mensajes = document.getElementById('mensajes-django');
+  if (mensajes) {
+    setTimeout(() => {
+      mensajes.style.opacity = '0';
+      mensajes.style.transform = 'translateY(-20px)';
+      setTimeout(() => mensajes.remove(), 500);
+    }, 5000);
+  }
+});
+</script>
+
+{% endblock %}

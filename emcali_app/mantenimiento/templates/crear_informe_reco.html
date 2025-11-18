@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+
+  <!-- Título -->
+  <h2 class="text-center mb-4 text-danger fw-bold mb-5">
+    {% if informe_existente and puede_editar %}
+      ✏️ Editar Informe de Reco
+    {% else %}
+      📋 Crear Informe de Reco
+    {% endif %}
+  </h2>
+
+  <div class="card shadow border-0 rounded-4">
+    <div class="card-body p-4">
+
+      <!-- Mensajes -->
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert 
+            {% if 'error' in message.tags %}alert-danger
+            {% elif 'success' in message.tags %}alert-success
+            {% else %}alert-info{% endif %}" role="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- Formulario -->
+      <form method="post" id="form-reco" enctype="multipart/form-data" data-orden-id="{{ orden.id }}">
+        {% csrf_token %}
+
+        <!-- Falla Identificada -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Falla Identificada:</label>
+          <select name="falla_identificada" class="form-select" required>
+            <option value="">-- Selecciona una falla --</option>
+            <option value="falta_tension_ac" {% if informe_existente and informe_existente.falla_identificada == 'falta_tension_ac' %}selected{% endif %}>Falta tensión AC</option>
+            <option value="modem_apagado" {% if informe_existente and informe_existente.falla_identificada == 'modem_apagado' %}selected{% endif %}>Modem apagado</option>
+            <option value="display_no_prende" {% if informe_existente and informe_existente.falla_identificada == 'display_no_prende' %}selected{% endif %}>Display caja de control no prende</option>
+            <option value="breaker_abierto" {% if informe_existente and informe_existente.falla_identificada == 'breaker_abierto' %}selected{% endif %}>Breaker de alimentación AC abierto</option>
+            <option value="fuente_dc_apagada" {% if informe_existente and informe_existente.falla_identificada == 'fuente_dc_apagada' %}selected{% endif %}>Fuente externa DC apagada</option>
+            <option value="caja_bloqueada" {% if informe_existente and informe_existente.falla_identificada == 'caja_bloqueada' %}selected{% endif %}>Caja de control bloqueada</option>
+            <option value="falta_antena" {% if informe_existente and informe_existente.falla_identificada == 'falta_antena' %}selected{% endif %}>Falta antena</option>
+            <option value="antena_caida" {% if informe_existente and informe_existente.falla_identificada == 'antena_caida' %}selected{% endif %}>Antena caída</option>
+            <option value="modem_no_comunica" {% if informe_existente and informe_existente.falla_identificada == 'modem_no_comunica' %}selected{% endif %}>Modem no comunica</option>
+            <option value="falla_fibra" {% if informe_existente and informe_existente.falla_identificada == 'falla_fibra' %}selected{% endif %}>Falla en fibra óptica</option>
+            <option value="desconocida" {% if informe_existente and informe_existente.falla_identificada == 'desconocida' %}selected{% endif %}>Desconocida</option>
+          </select>
+        </div>
+
+        <!-- Causa de la Falla -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Causa de la Falla:</label>
+          <textarea name="causa_falla" class="form-control" rows="3" required>{% if informe_existente %}{{ informe_existente.causa_falla }}{% endif %}</textarea>
+        </div>
+
+        <!-- Trabajo Realizado -->
+        <div class="mb-3">
+          <label class="form-label fw-bold">Trabajo Realizado:</label>
+          <textarea name="trabajo_realizado" class="form-control" rows="3" required>{% if informe_existente %}{{ informe_existente.trabajo_realizado }}{% endif %}</textarea>
+        </div>
+
+        <!-- Ubicación -->
+        <input type="hidden" name="latitud" id="latitud" value="{% if informe_existente %}{{ informe_existente.latitud }}{% endif %}">
+        <input type="hidden" name="longitud" id="longitud" value="{% if informe_existente %}{{ informe_existente.longitud }}{% endif %}">
+
+        <!-- Avisos -->
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" name="aviso_telco" id="aviso_telco"
+                 {% if informe_existente and informe_existente.aviso_telco %}checked{% endif %}>
+          <label class="form-check-label fw-bold" for="aviso_telco">
+            ¿Se avisó a TELCO?
+          </label>
+        </div>
+
+        <div id="detalle_telco_container" class="mb-3 {% if not informe_existente or not informe_existente.aviso_telco %}d-none{% endif %}">
+          <label class="form-label">Detalle TELCO:</label>
+          <textarea name="detalle_telco" class="form-control" rows="2">{% if informe_existente %}{{ informe_existente.detalle_telco }}{% endif %}</textarea>
+        </div>
+
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="checkbox" name="aviso_mante" id="aviso_mante"
+                 {% if informe_existente and informe_existente.aviso_mante %}checked{% endif %}>
+          <label class="form-check-label fw-bold" for="aviso_mante">
+            ¿Se avisó a Mantenimiento?
+          </label>
+        </div>
+
+        <div id="detalle_mante_container" class="mb-3 {% if not informe_existente or not informe_existente.aviso_mante %}d-none{% endif %}">
+          <label class="form-label">Detalle Mantenimiento:</label>
+          <textarea name="detalle_mante" class="form-control" rows="2">{% if informe_existente %}{{ informe_existente.detalle_mante }}{% endif %}</textarea>
+        </div>
+
+        <!-- Fotos -->
+        <h5 class="fw-bold mt-4 mb-3">📸 Tomar hasta 3 fotos</h5>
+        <div class="row g-3">
+          <div class="col-12 col-md-4">
+            <div class="border border-secondary border-2 rounded-3 p-3 text-center bg-light">
+              <label class="form-label">Foto 1</label>
+              <input type="file" name="foto1" accept="image/*" capture="camera" class="form-control">
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="border border-secondary border-2 rounded-3 p-3 text-center bg-light">
+              <label class="form-label">Foto 2</label>
+              <input type="file" name="foto2" accept="image/*" capture="camera" class="form-control">
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="border border-secondary border-2 rounded-3 p-3 text-center bg-light">
+              <label class="form-label">Foto 3</label>
+              <input type="file" name="foto3" accept="image/*" capture="camera" class="form-control">
+            </div>
+          </div>
+        </div>
+
+        <!-- Fotos existentes -->
+        {% if informe_existente and informe_existente.fotos.exists %}
+        <div class="mt-4">
+          <h5 class="fw-bold">Fotos existentes:</h5>
+          <div class="row g-3 mt-2">
+            {% for foto in informe_existente.fotos.all %}
+            <div class="col-6 col-md-4 text-center">
+              <img src="{{ foto.imagen.url }}" class="img-fluid rounded shadow-sm" alt="Foto {{ forloop.counter }}">
+              <p class="small text-muted mt-1">Foto {{ forloop.counter }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Botón -->
+        <button type="submit" id="btn-guardar" class="btn btn-danger w-100 fw-bold mt-4">
+          {% if informe_existente and puede_editar %}
+            Actualizar Reporte
+          {% else %}
+            Guardar Reporte
+          {% endif %}
+        </button>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/crear_informe_reco.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- Botón Volver dinámico -->
+<a href="{{ url_origen }}" 
+   class="btn" 
+   style="display:inline-block; margin-bottom:15px; background-color:#6c757d; color:white; padding:8px 15px; border-radius:6px; text-decoration:none; font-weight:bold;">
+   ← Volver
+</a>
+
+<h2 style="text-align:center; margin-bottom:10px; font-size:28px; font-weight:700; color:#2c3e50;">
+    Datos Estadísticos de la app
+</h2>
+
+<p style="text-align:center; font-size:16px; margin-bottom:30px; color:#7f8c8d;">
+    <span style="margin:0 10px;"><strong>Total Nodos:</strong> {{ total_nodos }}</span> |
+    <span style="margin:0 10px;"><strong>Subestaciones:</strong> {{ total_subestaciones }}</span> |
+    <span style="margin:0 10px;"><strong>Recos:</strong> {{ total_recos }}</span> |
+    <span style="margin:0 10px;"><strong>Comunicaciones:</strong> {{ total_comunicaciones }}</span>
+</p>
+
+<style>
+    body {
+        background: #f4f6f8;
+        font-family: 'Segoe UI', sans-serif;
+    }
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+        gap: 25px;
+        padding: 10px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    .chart-card {
+        padding: 20px;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .chart-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+    .chart-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #34495e;
+        text-align: center;
+    }
+    .chart-card canvas {
+        width: 100% !important;
+        height: 300px !important;
+    }
+    .chart-full-width {
+        grid-column: 1 / -1;
+    }
+    .nodes-section {
+        max-width: 1400px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: transform 0.2s ease;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+    }
+    .card h3 {
+        font-size: 20px;
+        color: #ff4d4d;
+        margin-bottom: 10px;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        font-size: 14px;
+    }
+    th, td {
+        padding: 10px;
+        text-align: center;
+        border-bottom: 1px solid #ddd;
+    }
+    th {
+        background-color: #ff4d4d;
+        color: white;
+    }
+    tr:hover {
+        background-color: #f9f9f9;
+    }
+    .btn {
+        display: inline-block;
+        padding: 8px 15px;
+        border-radius: 6px;
+        background-color: #ff4d4d;
+        color: white;
+        text-decoration: none;
+        font-size: 13px;
+        transition: background 0.3s ease;
+    }
+    .btn:hover {
+        background-color: #cc0000;
+    }
+</style>
+
+<div class="dashboard-container">
+    <div class="chart-card chart-full-width">
+        <div class="chart-title">Recos por Subestación</div>
+        <canvas id="recosSubestacionChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title">Estado comunicación</div>
+        <canvas id="estadoRecosChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title">Actividad Comunicaciones</div>
+        <canvas id="actividadComunicacionesChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title">Módems por Tecnología</div>
+        <canvas id="modemsTecnologiaChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title">Pendiente Mantenimiento (Actividades)</div>
+        <canvas id="pendienteMantenimientoChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <div class="chart-title">RI Obsoleto (Actividades)</div>
+        <canvas id="riObsoletoChart"></canvas>
+    </div>
+</div>
+
+<div class="nodes-section">
+    {% for nodo in nodos %}
+    <div class="card">
+        <h3>📍 Nodo: {{ nodo.nodo }}</h3>
+        <p><strong>Dirección:</strong> {{ nodo.direccion }}</p>
+        <p><strong>Subestación:</strong> {{ nodo.id_subestacion.nombre }}</p>
+
+        {% if nodo.reconectador_set.all %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Serial</th>
+                    <th>Modelo</th>
+                    <th>Responsable</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reco in nodo.reconectador_set.all %}
+                <tr>
+                    <td>{{ reco.serial_reco }}</td>
+                    <td>{{ reco.modelo }}</td>
+                    <td>{{ reco.responsable }}</td>
+                    <td>{{ reco.estado_reconectador|default:"Sin estado" }}</td>
+                    <td>
+                        <a href="{% url 'detalle_reco' reco.id_reco %}" class="btn">Ver detalle</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color: gray;">No hay reconectadores registrados en este nodo.</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+
+{{ subestaciones|json_script:"subestaciones-data" }}
+{{ recos_subestacion|json_script:"recos-subestacion-data" }}
+{{ estados|json_script:"estados-data" }}
+{{ total_por_estado|json_script:"total-por-estado-data" }}
+{{ actividad_labels|json_script:"actividad-labels-data" }}
+{{ actividad_totales|json_script:"actividad-totales-data" }}
+{{ tecnologias|json_script:"tecnologias-data" }}
+{{ total_tecnologias|json_script:"total-tecnologias-data" }}
+{{ pendiente_labels|json_script:"pendiente-labels-data" }}
+{{ pendiente_totales|json_script:"pendiente-totales-data" }}
+{{ ri_obsoleto_labels|json_script:"ri-obsoleto-labels-data" }}
+{{ ri_obsoleto_totales|json_script:"ri-obsoleto-totales-data" }}
+
+<script>
+    const subestaciones = JSON.parse(document.getElementById('subestaciones-data').textContent);
+    const recosSubestacion = JSON.parse(document.getElementById('recos-subestacion-data').textContent);
+    const estados = JSON.parse(document.getElementById('estados-data').textContent);
+    const totalPorEstado = JSON.parse(document.getElementById('total-por-estado-data').textContent);
+    const actividadLabels = JSON.parse(document.getElementById('actividad-labels-data').textContent);
+    const actividadTotales = JSON.parse(document.getElementById('actividad-totales-data').textContent);
+    const tecnologias = JSON.parse(document.getElementById('tecnologias-data').textContent);
+    const totalTecnologias = JSON.parse(document.getElementById('total-tecnologias-data').textContent);
+    const pendienteLabels = JSON.parse(document.getElementById('pendiente-labels-data').textContent);
+    const pendienteTotales = JSON.parse(document.getElementById('pendiente-totales-data').textContent);
+    const riObsoletoLabels = JSON.parse(document.getElementById('ri-obsoleto-labels-data').textContent);
+    const riObsoletoTotales = JSON.parse(document.getElementById('ri-obsoleto-totales-data').textContent);
+
+    function generarColores(cantidad) {
+        return Array.from({ length: cantidad }, (_, i) => `hsl(${(i * 360) / cantidad}, 70%, 60%)`);
+    }
+
+    const opcionesConLabels = {
+        responsive: true,
+        plugins: {
+            legend: { labels: { color: '#2c3e50', font: { size: 14 } } },
+            datalabels: {
+                color: '#000',
+                font: { weight: 'bold' },
+                anchor: 'end',
+                align: 'top',
+                formatter: value => value.toLocaleString()
+            }
+        },
+        scales: { 
+            y: { beginAtZero: true, ticks: { color: '#2c3e50' } },
+            x: { ticks: { color: '#2c3e50', autoSkip: false, maxRotation: 45, minRotation: 45 } }
+        }
+    };
+
+    new Chart(document.getElementById('recosSubestacionChart'), {
+        type: 'bar',
+        data: { labels: subestaciones, datasets: [{ label: 'Recos por Subestación', data: recosSubestacion, backgroundColor: generarColores(recosSubestacion.length), borderColor: '#34495e', borderWidth: 1 }] },
+        options: opcionesConLabels,
+        plugins: [ChartDataLabels]
+    });
+
+    new Chart(document.getElementById('estadoRecosChart'), {
+        type: 'bar',
+        data: { labels: estados, datasets: [{ label: 'Estado de Recos', data: totalPorEstado, backgroundColor: generarColores(totalPorEstado.length), borderColor: '#34495e', borderWidth: 1 }] },
+        options: opcionesConLabels,
+        plugins: [ChartDataLabels]
+    });
+
+    new Chart(document.getElementById('actividadComunicacionesChart'), {
+        type: 'bar',
+        data: { labels: actividadLabels, datasets: [{ label: 'Actividad Comunicaciones', data: actividadTotales, backgroundColor: generarColores(actividadTotales.length), borderColor: '#34495e', borderWidth: 1 }] },
+        options: opcionesConLabels,
+        plugins: [ChartDataLabels]
+    });
+
+    new Chart(document.getElementById('modemsTecnologiaChart'), {
+        type: 'bar',
+        data: { labels: tecnologias, datasets: [{ label: 'Módems por Tecnología', data: totalTecnologias, backgroundColor: generarColores(totalTecnologias.length), borderColor: '#34495e', borderWidth: 1 }] },
+        options: opcionesConLabels,
+        plugins: [ChartDataLabels]
+    });
+
+    new Chart(document.getElementById('pendienteMantenimientoChart'), {
+        type: 'bar',
+        data: { labels: pendienteLabels, datasets: [{ label: 'Actividades en Pendiente Mantenimiento', data: pendienteTotales, backgroundColor: generarColores(pendienteTotales.length), borderColor: '#34495e', borderWidth: 1 }] },
+        options: opcionesConLabels,
+        plugins: [ChartDataLabels]
+    });
+
+    new Chart(document.getElementById('riObsoletoChart'), {
+        type: 'bar',
+        data: { labels: riObsoletoLabels, datasets: [{ label: 'Actividades en RI Obsoleto', data: riObsoletoTotales, backgroundColor: generarColores(riObsoletoTotales.length), borderColor: '#34495e', borderWidth: 1 }] },
+        options: opcionesConLabels,
+        plugins: [ChartDataLabels]
+    });
+</script>
+
+{% endblock %}

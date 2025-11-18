@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div style="max-width: 1100px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+    <!-- Mensajes (se ocultan después de 5s) -->
+    {% if messages %}
+    <div id="messages-container" style="margin-bottom: 15px;">
+        {% for message in messages %}
+        <div style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <h1 style="color: #d00000; text-align: center; margin-bottom: 10px;">
+        Histórico de Trabajos – Comunicación: {{ comunicacion.modem }} ({{ comunicacion.ip }})
+    </h1>
+    <p style="text-align: center; margin-bottom: 30px;">
+        <strong>Nodo:</strong> {{ nodo.nodo }} &nbsp;|&nbsp; <strong>Reco:</strong> {{ reco.n_equipo }}
+    </p>
+
+    <!-- BOTÓN DESCARGAR INFORME -->
+    <div style="text-align: center; margin-bottom: 30px;">
+        <a href="{% url 'historicos_recos_pdf' comunicacion.id_comunicacion %}"
+           style="padding: 10px 20px; background-color: #28a745; color: #fff; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            ⬇ Descargar Informe
+        </a>
+    </div>
+
+    <!-- CONTENEDOR EN DOS COLUMNAS -->
+    <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+
+        <!-- COLUMNA IZQUIERDA: INFORMES -->
+        <div style="flex: 2; min-width: 300px;">
+            <h3 style="color: #333; margin-bottom: 15px;">Informes de trabajo</h3>
+            {% if informes %}
+                {% for informe in informes %}
+                    <div style="background: #fff; border-left: 5px solid #0056b3; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); border-radius: 8px;">
+                        <p><strong>Fecha:</strong> {{ informe.hora_cierre|date:"Y-m-d H:i" }}</p>
+                        <p><strong>Falla Identificada:</strong> {{ informe.falla_identificada|default:"—" }}</p>
+                        <p><strong>Causa Falla:</strong> {{ informe.causa_falla|default:"—" }}</p>
+                        <p><strong>Trabajo Realizado:</strong> {{ informe.trabajo_realizado|default:"—" }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="color: gray;">No hay trabajos registrados aún para esta comunicación.</p>
+            {% endif %}
+        </div>
+
+        <!-- COLUMNA DERECHA: COMENTARIOS Y ESTADO -->
+        <div style="flex: 1; min-width: 280px;">
+
+            <!-- FORMULARIO ESTADO -->
+            <form method="post" style="margin-bottom: 20px;">
+                {% csrf_token %}
+                <label for="estado" style="display: block; font-weight: bold; margin-bottom: 5px;">Estado Reconectador:</label>
+                <select id="estado" name="estado_reco" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+                    <option value="" {% if not reco.estado_reconectador %}selected{% endif %}>-- Seleccionar Estado --</option>
+                    <option value="operable" {% if reco.estado_reconectador == "operable" %}selected{% endif %}>Operable</option>
+                    <option value="pendiente_telco" {% if reco.estado_reconectador == "pendiente_telco" %}selected{% endif %}>Pendiente Telco</option>
+                    <option value="pendiente_mantenimiento" {% if reco.estado_reconectador == "pendiente_mantenimiento" %}selected{% endif %}>Pendiente Mantenimiento</option>
+                    <option value="pendiente_operacion" {% if reco.estado_reconectador == "pendiente_operacion" %}selected{% endif %}>Pendiente Operación</option>
+                </select>
+                <button type="submit" style="margin-top: 10px; padding: 8px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px;">
+                    Guardar Estado
+                </button>
+            </form>
+
+            <!-- LISTA DE COMENTARIOS -->
+            <h3 style="color: #333; margin-bottom: 15px;">Comentarios del Ingeniero</h3>
+            {% if comentarios %}
+                <ul style="list-style-type: none; padding: 0;">
+                    {% for comentario in comentarios %}
+                        <li style="background-color: #f5f5f5; border-left: 4px solid #007bff; padding: 10px 15px; margin-bottom: 10px; border-radius: 5px;">
+                            <strong>{{ comentario.creado|date:"Y-m-d H:i" }}:</strong>
+                            {{ comentario.texto }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="color: gray;">No hay comentarios aún.</p>
+            {% endif %}
+
+            <!-- FORMULARIO PARA NUEVO COMENTARIO -->
+            <form method="post" style="margin-top: 20px;">
+                {% csrf_token %}
+                <label for="comentario_ingeniero"><strong>Nuevo comentario:</strong></label><br>
+                <textarea name="comentario_ingeniero" id="comentario_ingeniero" rows="3" style="width: 100%; padding: 10px; margin-top: 10px; border-radius: 6px; border: 1px solid #ccc;"></textarea><br>
+                <button type="submit" style="margin-top: 10px; padding: 8px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px;">
+                    Guardar Comentario
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- BOTÓN DE VOLVER -->
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="{% url 'vista_general_recos' %}" style="padding: 10px 20px; background-color: #ffcc00; color: #000; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            ← Volver
+        </a>
+    </div>
+</div>
+
+<!-- Script: ocultar mensajes después de 5s -->
+<script>
+    setTimeout(function() {
+        var container = document.getElementById('messages-container');
+        if (container) {
+            container.style.transition = "opacity 0.5s ease";
+            container.style.opacity = "0";
+            setTimeout(function(){ container.remove(); }, 500);
+        }
+    }, 5000);
+</script>
+{% endblock %}

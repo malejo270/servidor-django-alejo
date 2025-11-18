@@ -1,0 +1,68 @@
+/* === Sidebar EMCALI === */
+.sidebar {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  width: 250px;
+  height: calc(100% - 56px);
+  background-color: #002855; /* Azul EMCALI */
+  color: white;
+  padding-top: 1rem;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.sidebar .nav-link {
+  color: #ffffff;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 0.5rem;
+  transition: background 0.3s;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active {
+  background-color: #004080; /* Azul más claro al pasar el mouse */
+}
+
+.sidebar i {
+  font-size: 1.2rem;
+}
+
+/* === Contenido principal === */
+.main-content {
+  margin-left: 250px;
+  margin-top: 56px;
+  transition: all 0.3s ease;
+  padding: 20px;
+}
+
+/* === Sidebar oculto en pantallas pequeñas === */
+@media (max-width: 992px) {
+  .sidebar {
+    left: -250px;
+  }
+
+  .sidebar.active {
+    left: 0;
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+}
+
+/* === Navbar personalizada === */
+.navbar-custom {
+  background-color: #004080 !important;
+  color: white !important;
+}
+
+.navbar-brand {
+  color: white !important;
+}

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+    <!-- Botón de volver -->
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'mantenimiento' %}" 
+           style="display: inline-block; background-color: #ffcc00; color: #000; padding: 10px 20px; font-weight: bold; text-decoration: none; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); transition: background-color 0.3s;">
+            ← Volver
+        </a>
+    </div>
+
+    <!-- Encabezado -->
+    <h2 style="text-align: center; color: #d00000; margin-bottom: 30px;">
+        Informe de la Orden {{ informe.orden.n_orden }}
+    </h2>
+
+    <!-- Contenedor principal en grid -->
+    <div style="
+        display: grid; 
+        grid-template-columns: 1fr auto; 
+        gap: 30px;
+        background: #fff; 
+        padding: 30px 40px; 
+        border-left: 6px solid #ffcc00; 
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
+        border-radius: 8px;
+    ">
+
+        <!-- Información del informe (izquierda) -->
+        <div>
+            <p><strong>Trabajo realizado:</strong> {{ informe.trabajo_realizado_sub_comu }}</p>
+            <p><strong>Otras observaciones:</strong> {{ informe.otras_observaciones }}</p>
+            <p><strong>longitud:</strong> {{ informe.longitud_sub }}</p>
+            <p><strong>latitud:</strong> {{ informe.latitud_sub }}</p>
+        </div>
+
+        <!-- Acciones (derecha, alineadas arriba) -->
+        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 20px;">
+
+            {% if informe.orden.estado_orden != 'completada' %}
+            <form method="POST">
+                {% csrf_token %}
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <span style="margin-right: 10px; font-weight: bold;">✅ Completada</span>
+                    <input type="checkbox" name="completada" onchange="this.form.submit()" style="display: none;">
+                    <span style="width: 50px; height: 28px; background-color: #ccc; border-radius: 34px; position: relative; transition: 0.3s;">
+                        <span style="content: ''; position: absolute; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: 0.3s;"></span>
+                    </span>
+                </label>
+            </form>
+            {% else %}
+            <div style="font-weight: bold; color: green;">✅ Orden ya completada</div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Estilos del switch -->
+    <style>
+        input[type="checkbox"]:checked + span {
+            background-color: #d00000 !important;
+        }
+
+        input[type="checkbox"]:checked + span span {
+            transform: translateX(22px);
+        }
+    </style>
+</div>
+{% endblock %}

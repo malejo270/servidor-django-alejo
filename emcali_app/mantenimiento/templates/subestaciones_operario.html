@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Lista de Subestaciones</h2>
+
+<style>
+    .subestacion-card {
+        border: 1px solid #ccc;
+        padding: 15px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+        background: #f9f9f9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .subestacion-info {
+        font-size: 14px;
+    }
+    .btn-reporte {
+        padding: 6px 14px;
+        background: #3498db;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 13px;
+    }
+    .btn-reporte:hover {
+        background: #2980b9;
+    }
+</style>
+
+{% for sub in subestaciones %}
+<div class="subestacion-card">
+    <div class="subestacion-info">
+        <b>{{ sub.nombre }}</b><br>
+        <small>{{ sub.ubicacion }}</small>
+    </div>
+    <div>
+        <a href="{% url 'seleccionar_reporte' sub.id %}" class="btn-reporte">
+            Realizar reporte
+        </a>
+    </div>
+</div>
+{% empty %}
+<p>No hay subestaciones registradas.</p>
+{% endfor %}
+
+{% endblock %}

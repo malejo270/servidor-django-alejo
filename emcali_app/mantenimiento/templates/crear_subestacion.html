@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+    <!-- Botón de volver -->
+    <div style="margin-bottom: 10px;">
+        <a href="{% url 'subestaciones' %}" 
+           style="background-color: #ffcc00; color: #000; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            ← Volver
+        </a>
+    </div>
+
+    <!-- Formulario -->
+    <div style="background: #fff; padding: 30px 40px; border-left: 6px solid #ffcc00; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+        <h2 style="color: #d00000; text-align: center; margin-bottom: 30px;">Registrar Subestación</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Campo nombre -->
+            <div style="margin-bottom: 20px;">
+                {{ form.nombre.label_tag }}
+                {{ form.nombre }}
+                {% if form.nombre.errors %}
+                    <div style="color:red; font-size: 14px;">{{ form.nombre.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Campo ubicación -->
+            <div style="margin-bottom: 30px;">
+                {{ form.ubicacion.label_tag }}
+                {{ form.ubicacion }}
+                {% if form.ubicacion.errors %}
+                    <div style="color:red; font-size: 14px;">{{ form.ubicacion.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Botón -->
+            <button type="submit" 
+                    style="width: 100%; background-color: #d00000; color: white; padding: 12px; font-weight: bold; border: none; border-radius: 5px; font-size: 16px;">
+                Guardar Subestación
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

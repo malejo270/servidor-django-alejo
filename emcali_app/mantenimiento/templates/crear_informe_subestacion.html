@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-form">
+
+    <!-- Botón volver -->
+    <div class="volver">
+        <a href="javascript:history.back()" class="btn-volver">⬅ Volver</a>
+    </div>
+
+    <!-- Título -->
+    <h2 class="titulo">📋 Crear / Editar Informe Subestación-Comu</h2>
+
+    <div class="form-box">
+
+        <!-- Mostrar mensajes Django -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Mostrar errores del formulario -->
+        {% if form.errors %}
+            <div class="errorlist">
+                <strong>❌ Corrige los siguientes errores:</strong>
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                        <li><b>{{ field|capfirst }}:</b> {{ errors|striptags }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form method="post" id="form-subestacion">
+            {% csrf_token %}
+            <label for="{{ form.trabajo_realizado_sub_comu.id_for_label }}">Trabajo realizado</label>
+            {{ form.trabajo_realizado_sub_comu }}
+
+            {{ form.otras_observaciones.label_tag }}
+            {{ form.otras_observaciones }}
+
+            <!-- Campos ocultos -->
+            <input type="hidden" name="latitud_sub" id="id_latitud_sub" value="{{ form.instance.latitud_sub|default_if_none:'' }}">
+            <input type="hidden" name="longitud_sub" id="id_longitud_sub" value="{{ form.instance.longitud_sub|default_if_none:'' }}">
+            <input type="hidden" name="hora_inicio" id="hora_inicio" value="{{ form.instance.hora_inicio|default_if_none:'' }}">
+            <input type="hidden" name="hora_cierre" id="hora_cierre" value="{{ form.instance.hora_cierre|default_if_none:'' }}">
+
+            <button type="submit" id="btn-guardar" class="btn-rojo" disabled>Guardar Informe</button>
+        </form>
+    </div>
+</div>
+
+<!-- Archivos CSS y JS -->
+<link rel="stylesheet" href="{% static 'css/crear_informe_subestacion.css' %}">
+<script src="{% static 'js/crear_informe_subestacion.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width:600px; margin:auto; background:white; padding:20px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    
+    <h2 style="text-align:center; margin-bottom:20px; color:#2c3e50;">
+        ➕ Crear Pregunta
+    </h2>
+
+    <form method="post" id="preguntaForm">
+        {% csrf_token %}
+
+        <!-- Mostrar errores generales del formulario -->
+        {% if form.non_field_errors %}
+        <div style="color:red; margin-bottom:15px; padding:10px; background:#ffe6e6; border-radius:4px;">
+            {% for error in form.non_field_errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div style="margin-bottom:15px;">
+            <label for="{{ form.texto.id_for_label }}"><b>Texto de la pregunta</b></label>
+            {{ form.texto }}
+            {% if form.texto.errors %}
+            <div style="color:red; font-size:12px; margin-top:5px;">
+                {% for error in form.texto.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label for="{{ form.tipo.id_for_label }}"><b>Tipo de respuesta</b></label>
+            {{ form.tipo }}
+            {% if form.tipo.errors %}
+            <div style="color:red; font-size:12px; margin-top:5px;">
+                {% for error in form.tipo.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label for="{{ form.categoria.id_for_label }}"><b>Categoría</b></label>
+            {{ form.categoria }}
+            {% if form.categoria.errors %}
+            <div style="color:red; font-size:12px; margin-top:5px;">
+                {% for error in form.categoria.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label for="{{ form.padre.id_for_label }}"><b>Pregunta Padre (Opcional)</b></label>
+            {{ form.padre }}
+            <small style="color:gray;">
+                Seleccione una categoría primero para ver las preguntas padre disponibles
+            </small>
+            {% if form.padre.errors %}
+            <div style="color:red; font-size:12px; margin-top:5px;">
+                {% for error in form.padre.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="text-align:center; margin-top:20px;">
+            <button type="submit" 
+                    style="padding:10px 20px; background:#27ae60; color:white; border:none; border-radius:6px; font-size:15px; cursor:pointer;">
+                Guardar Pregunta
+            </button>
+            <a href="{% url 'lista_preguntas' %}" 
+               style="padding:10px 20px; background:#95a5a6; color:white; border:none; border-radius:6px; font-size:15px; cursor:pointer; text-decoration:none; margin-left:10px;">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categoriaSelect = document.getElementById("id_categoria");
+    const padreSelect = document.getElementById("id_padre");
+    
+    function cargarPadres(categoria) {
+        if (categoria) {
+            // Mostrar loading
+            padreSelect.innerHTML = '<option value="">Cargando preguntas padre...</option>';
+            padreSelect.disabled = true;
+            
+            // Hacer petición AJAX
+            fetch(`/filtrar-padres/?categoria=${categoria}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor');
+                }
+                return response.json();
+            })
+            .then(data => {
+                padreSelect.innerHTML = data.options;
+                padreSelect.disabled = false;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                padreSelect.innerHTML = '<option value="">Error al cargar las preguntas padre</option>';
+                padreSelect.disabled = false;
+            });
+        } else {
+            // Si no hay categoría seleccionada, limpiar padres
+            padreSelect.innerHTML = '<option value="">---------</option>';
+            padreSelect.disabled = false;
+        }
+    }
+    
+    // Event listener para cambio de categoría
+    categoriaSelect.addEventListener("change", function() {
+        const categoria = this.value;
+        cargarPadres(categoria);
+    });
+    
+    // Cargar padres automáticamente si ya hay una categoría seleccionada (en caso de edición)
+    const categoriaInicial = categoriaSelect.value;
+    if (categoriaInicial) {
+        cargarPadres(categoriaInicial);
+    }
+    
+    // Prevenir envío del formulario si está cargando
+    document.getElementById('preguntaForm').addEventListener('submit', function(e) {
+        if (padreSelect.disabled) {
+            e.preventDefault();
+            alert('Espere a que terminen de cargar las preguntas padre');
+        }
+    });
+});
+</script>
+
+<style>
+/* Estilos adicionales para mejorar la apariencia */
+select:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+    margin-bottom: 5px;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-success {
+    background: #27ae60;
+    color: white;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+</style>
+{% endblock %}

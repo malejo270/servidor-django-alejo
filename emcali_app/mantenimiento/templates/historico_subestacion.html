@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Histórico de {{ subestacion.nombre }}</h2>
+
+{% if datos %}
+  <ul>
+    {% for item in datos %}
+      {% with h=item.historico revision=item.revision respuestas=item.respuestas %}
+      <li>
+        <strong>Fecha:</strong> {{ h.fecha|date:"d/m/Y H:i" }} <br>
+
+        {% if respuestas %}
+          <h4>📋 Respuestas registradas:</h4>
+          <ul>
+            {% regroup respuestas by componente as respuestas_por_componente %}
+
+            {% for grupo in respuestas_por_componente %}
+              <li>
+                {% if grupo.grouper %}
+                  <strong>🛠️ Componente: {{ grupo.grouper.nombre_componente }}</strong>
+                {% else %}
+                  <strong>🛠️ General (sin componente)</strong>
+                {% endif %}
+                <ul>
+                  {% for r in grupo.list %}
+                    <li>
+                      <strong>{{ r.pregunta.texto }}</strong> → {{ r.respuesta }}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>No hay respuestas registradas.</p>
+        {% endif %}
+      </li>
+      <hr>
+      {% endwith %}
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No hay históricos registrados para esta subestación.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,330 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema EMCALI{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --emcali-azul: rgb(40, 90, 21);
+            --emcali-verde: #43B02A;
+            --emcali-amarillo: #FFD100;
+            --emcali-naranja: #F68D2E;
+            --emcali-blanco: #FFFFFF;
+            --emcali-gris: #F5F5F5;
+            --emcali-oscuro: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: var(--emcali-gris);
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, var(--emcali-azul) 0%, rgb(40, 90, 21) 100%);
+            color: var(--emcali-blanco);
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            color: var(--emcali-blanco);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-header h2 i {
+            margin-right: 10px;
+            color: var(--emcali-amarillo);
+        }
+
+        .user-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        /* ROLES */
+        .user-role {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .user-role.ingeniero { background: var(--emcali-verde); }
+        .user-role.operario { background: var(--emcali-naranja); }
+        .user-role.sin-rol { background: gray; }
+
+        /* MENU */
+        .menu-section-title {
+            padding: 12px 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--emcali-amarillo);
+            background-color: rgba(0, 0, 0, 0.2);
+            margin-top: 10px;
+            border-left: 3px solid var(--emcali-amarillo);
+        }
+
+        .menu-item {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--emcali-blanco);
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding-left: 30px;
+        }
+
+        .menu-item.active {
+            background-color: var(--emcali-verde);
+            box-shadow: inset 3px 0 0 var(--emcali-amarillo);
+        }
+
+        .menu-item i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* SUBMENU */
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .submenu.active {
+            max-height: 300px;
+        }
+
+        .submenu-item {
+            padding: 12px 25px 12px 60px;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--emcali-blanco);
+        }
+
+        .submenu-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--emcali-amarillo);
+        }
+
+        .menu-divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+            margin: 10px 20px;
+        }
+
+        /* FOOTER */
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            padding: 15px 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        /* CONTENIDO */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 30px;
+            overflow-y: auto;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* RESPONSIVE (CORREGIDO) */
+        @media (max-width: 768px) {
+
+            .sidebar {
+                width: 70px !important;
+                overflow-x: hidden;
+            }
+
+            .sidebar-header img,
+            .sidebar-header h2 span,
+            .sidebar-header p,
+            .menu-item span,
+            .menu-section-title,
+            .user-info {
+                display: none !important;
+            }
+
+            .menu-item {
+                justify-content: center;
+                padding: 20px 0 !important;
+            }
+
+            .menu-item i {
+                margin-right: 0 !important;
+                font-size: 1.4rem;
+            }
+
+            .main-content {
+                margin-left: 70px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="{% static 'images/maurogay.png' %}" alt="Logo" width="200">
+            <p>Sistema de Gestión</p>
+
+            <div class="user-info">
+                {% if user.is_authenticated %}
+                    <div class="fw-bold">{{ user.username }}</div>
+
+                    {% if user_role == 'jefe' %}
+                        <div class="user-role ingeniero">INGENIERO</div>
+
+                    {% elif user_role == 'operario' %}
+                        <div class="user-role operario">OPERARIO</div>
+
+                    {% else %}
+                        <div class="user-role sin-rol">SIN ROL</div>
+                    {% endif %}
+                {% else %}
+                    <div class="fw-bold text-muted">Usuario no autenticado</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="sidebar-menu">
+
+            {% if user_role == 'jefe' %}
+
+                <a href="{% url 'mantenimiento' %}" class="menu-item {% if request.resolver_match.url_name == 'mantenimiento' %}active{% endif %}">
+                    <i class="fas fa-home"></i><span>Inicio</span>
+                </a>
+
+                <div class="menu-section-title"><i class="fas fa-broadcast-tower"></i> COMUNICACIONES</div>
+
+                <a href="{% url 'vista_general_recos' %}" class="menu-item">
+                    <i class="fas fa-plug"></i><span>Reconectadores</span>
+                </a>
+
+                <a href="{% url 'subestaciones_comunicacion' %}" class="menu-item">
+                    <i class="fas fa-server"></i><span>Subestación</span>
+                </a>
+
+                <div class="menu-divider"></div>
+
+                <div class="menu-section-title"><i class="fas fa-clipboard-list"></i> GESTIÓN</div>
+
+                <a href="{% url 'pruebapotly' %}?from=mantenimiento" class="menu-item">
+                    <i class="fas fa-chart-bar"></i><span>Estadísticas</span>
+                </a>
+
+                <a href="{% url 'registrar_usuario' %}" class="menu-item">
+                    <i class="fas fa-user"></i><span>Usuarios</span>
+                </a>
+
+            {% elif user_role == 'operario' %}
+
+                <div class="menu-section-title"><i class="fas fa-mobile-alt"></i> OPERADORES MÓVILES</div>
+
+                <a href="{% url 'lista_ordenes' %}" class="menu-item">
+                    <i class="fas fa-hard-hat"></i><span>Mis Órdenes</span>
+                </a>
+
+                <a href="{% url 'vista_general_recos_ope' %}" class="menu-item">
+                    <i class="fas fa-history"></i><span>Históricos</span>
+                </a>
+
+                <a href="{% url 'pruebapotly' %}" class="menu-item">
+                    <i class="fas fa-tools"></i><span>Estadística</span>
+                </a>
+
+            {% endif %}
+
+            <div class="menu-divider"></div>
+
+            <div class="menu-section-title"><i class="fas fa-user-circle"></i> PERFIL</div>
+
+            <a href="{% url 'logout' %}" class="menu-item text-warning">
+                <i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span>
+            </a>
+
+        </div>
+
+        <br>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function toggleSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const chevron = submenu.previousElementSibling.querySelector('.fa-chevron-down');
+
+            submenu.classList.toggle('active');
+            chevron.style.transform = submenu.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+    <!-- Botón volver -->
+    <div style="margin-bottom: 10px;">
+        <a href="{% url 'mantenimiento' %}" style="background-color: #ffcc00; color: #000; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+            ← Volver
+        </a>
+    </div>
+
+    <!-- Contenedor del formulario -->
+    <div style="background: #fff; padding: 30px 40px; border-left: 6px solid #ffcc00; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+        <h2 style="color: #d00000; text-align: center; margin-bottom: 30px;">Crear Orden</h2>
+
+        <!-- Mostrar errores generales del formulario -->
+        {% if form.errors %}
+            <div style="background: #ffe6e6; border: 1px solid #d00000; color: #d00000; padding: 10px; border-radius: 5px; margin-bottom: 20px;">
+                Por favor corrige los errores marcados abajo.
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 20px;">
+                <label><strong>Número de Orden:</strong></label>
+                <input type="text" name="n_orden" value="{{ form.n_orden.value|default_if_none:'' }}" required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                {% if form.n_orden.errors %}
+                    <div style="color: red; font-size: 14px;">{{ form.n_orden.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label><strong>Descripción:</strong></label>
+                <textarea name="descripcion" rows="3" required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">{{ form.descripcion.value|default_if_none:'' }}</textarea>
+                {% if form.descripcion.errors %}
+                    <div style="color: red; font-size: 14px;">{{ form.descripcion.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label><strong>Fecha de ejecución:</strong></label>
+                <input type="date" name="fecha" value="{{ form.fecha.value|default_if_none:'' }}" required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                {% if form.fecha.errors %}
+                    <div style="color: red; font-size: 14px;">{{ form.fecha.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label><strong>Tipo:</strong></label>
+                <select name="tipo" id="tipo-select" required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="">-- Selecciona el tipo --</option>
+                    <option value="subestacion" {% if form.tipo.value == 'subestacion' %}selected{% endif %}>Subestación</option>
+                    <option value="reco" {% if form.tipo.value == 'reco' %}selected{% endif %}>Reconectador</option>
+                </select>
+                {% if form.tipo.errors %}
+                    <div style="color: red; font-size: 14px;">{{ form.tipo.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- CAMPO dinámico cuando selecciona RECO -->
+            <div id="campo-reco" style="display: none; margin-bottom: 20px;">
+                <label><strong>Nombre o número del nodo asociado al Reco:</strong></label>
+                <input id="nodo-input" name="nombre_nodo_reco" value="{{ form.nombre_nodo_reco.value|default_if_none:'' }}" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                <ul id="lista-nodos" hidden>
+                    {% for nodo in nodos %}
+                        <li>{{ nodo.nodo }}</li>
+                    {% endfor %}
+                </ul>
+                {% if form.nombre_nodo_reco.errors %}
+                    <div style="color: red; font-size: 14px;">{{ form.nombre_nodo_reco.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- CAMPO dinámico cuando selecciona SUBESTACION -->
+            <div id="campo-subestacion" style="display: none; margin-bottom: 20px;">
+                <label><strong>Nombre de la subestación:</strong></label>
+                <input id="subestacion-input" name="nombre_subestacion_texto" value="{{ form.nombre_subestacion_texto.value|default_if_none:'' }}" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                <ul id="lista-subestaciones" hidden>
+                    {% for sub in subestaciones %}
+                        <li>{{ sub.nombre }}</li>
+                    {% endfor %}
+                </ul>
+                {% if form.nombre_subestacion_texto.errors %}
+                    <div style="color: red; font-size: 14px;">{{ form.nombre_subestacion_texto.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Solo PROGRAMADORES -->
+          
+
+            <!-- Solo OPERARIOS -->
+            <div style="margin-bottom: 20px;">
+                <label><strong>Asignada a:</strong></label>
+                <select name="asignada_a" required style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="">-- Selecciona el trabajador --</option>
+                    {% for trabajador in trabajadores_operarios %}
+                        <option value="{{ trabajador.id }}" {% if form.asignada_a.value == trabajador.id|stringformat:"s" %}selected{% endif %}>
+                            {{ trabajador.nombre_completo }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.asignada_a.errors %}
+                    <div style="color: red; font-size: 14px;">{{ form.asignada_a.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <button type="submit" style="width: 100%; background-color: #d00000; color: white; padding: 12px; font-weight: bold; border: none; border-radius: 5px; font-size: 16px;">
+                Guardar Orden
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Awesomplete -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.js"></script>
+
+<script>
+    const tipoSelect = document.getElementById('tipo-select');
+    const campoReco = document.getElementById('campo-reco');
+    const campoSub = document.getElementById('campo-subestacion');
+
+    function toggleCampos() {
+        const tipo = tipoSelect.value;
+        campoReco.style.display = (tipo === 'reco') ? 'block' : 'none';
+        campoSub.style.display = (tipo === 'subestacion') ? 'block' : 'none';
+    }
+
+    tipoSelect.addEventListener('change', toggleCampos);
+    window.onload = toggleCampos;
+
+    // Awesomplete para nodos
+    new Awesomplete(document.querySelector("#nodo-input"), {
+        list: "#lista-nodos",
+        minChars: 0,
+        autoFirst: true
+    });
+
+    // Awesomplete para subestaciones
+    new Awesomplete(document.querySelector("#subestacion-input"), {
+        list: "#lista-subestaciones",
+        minChars: 0,
+        autoFirst: true
+    });
+</script>
+{% endblock %}

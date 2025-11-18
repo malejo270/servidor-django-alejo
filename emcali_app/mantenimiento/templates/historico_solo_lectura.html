@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="historico-container">
+
+    <!-- BOTONES SUPERIORES -->
+    <div class="top-buttons">
+        <!-- Volver -->
+        <a href="{% url 'vista_general_recos_ope' %}" class="btn-volver">
+            ← Volver
+        </a>
+
+        <!-- Reporte de Emergencia -->
+        <a href="{% url 'reporte_emergencia' %}" class="btn-emergencia">
+            🚨 Reporte de Emergencia
+        </a>
+    </div>
+
+    <!-- TÍTULO PRINCIPAL -->
+    <h1 class="historico-titulo">
+        Histórico de Trabajos – Comunicación: {{ comunicacion.modem }} ({{ comunicacion.ip }})
+    </h1>
+
+    <!-- INFO DE NODO Y RECO -->
+    <p class="info-nodo-reco">
+        <strong>Nodo:</strong> {{ nodo.nodo }} &nbsp;|&nbsp;
+        <strong>Reco:</strong> {{ reco.n_equipo }}
+    </p>
+
+    <!-- LISTADO DE INFORMES -->
+    <div class="informes-container">
+        <h3>Informes de trabajo</h3>
+        {% if informes %}
+            {% for item in informes %}
+                <div class="informe-card">
+                    <p><strong>Fecha de cierre:</strong> {{ item.hora_cierre|date:"Y-m-d H:i" }}</p>
+                    <p><strong>Falla Identificada:</strong> {{ item.falla_identificada|default:"—" }}</p>
+                    <p><strong>Causa de la Falla:</strong> {{ item.causa_falla|default:"—" }}</p>
+                    <p><strong>Trabajo Realizado:</strong> {{ item.trabajo_realizado|default:"—" }}</p>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-informes">No hay trabajos registrados aún para esta comunicación.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="{% static 'css/historico_solo_lectura.css' %}">
+{% endblock %}

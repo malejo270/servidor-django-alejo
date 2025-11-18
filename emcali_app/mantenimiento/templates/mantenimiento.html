@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Órdenes y Reportes Técnicos{% endblock %}
+
+{% block content %}
+<style>
+  .hola {
+    background-color: #a5f3fc !important;
+    color: #000;
+  }
+  .hola th {
+    background-color: rgb(40, 90, 21) !important;
+    color: white !important;
+    font-weight: bold;
+  }
+  .btn-tutu {
+    background-color: rgb(40,90,21);
+    color: white;
+  }
+  .btn-tutu:hover {
+    background-color: #1fbee6;
+    color: white;
+  }
+
+  /* ✔ NUEVO BOTÓN VERDE EMCALI */
+  .hhh {
+    background-color: #43B02A !important;
+    color: white !important;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    transition: 0.3s;
+  }
+  .hhh:hover {
+    background-color: #2e7d1f !important;
+    color: white !important;
+  }
+</style>
+
+<div class="container hh my-4">
+
+  <h2 class="text-center text-black mb-4 fw-bold">
+    Órdenes y Reportes Técnicos
+  </h2>
+
+  {% if messages %}
+  <div id="alertas" class="mb-3">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} fw-bold py-2">{{ message }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Filtros -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+
+    <!-- ✔ BOTÓN ARREGLADO -->
+    <a href="{% url 'crear_orden' %}" class="hhh">
+      <i class="bi bi-plus-lg"></i> Crear Orden
+    </a>
+
+    <div class="position-relative">
+      <button type="button" class="btn btn-secondary fw-bold" id="btn-filtro" onclick="toggleFiltros()">🔍 Filtros</button>
+
+      <div id="filtros-panel" class="card p-3 shadow position-absolute end-0 mt-2" style="width: 300px; display: none; z-index: 100;">
+        <form method="get" class="d-flex flex-column gap-3">
+          <div>
+            <label class="fw-bold">Fecha inicio</label>
+            <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}" class="form-control">
+          </div>
+          <div>
+            <label class="fw-bold">Fecha fin</label>
+            <input type="date" name="fecha_fin" value="{{ fecha_fin }}" class="form-control">
+          </div>
+          <div>
+            <label class="fw-bold">Ordenar por fecha</label>
+            <select name="orden" class="form-select">
+              <option value="desc" {% if orden == "desc" %}selected{% endif %}>Más recientes primero</option>
+              <option value="asc" {% if orden == "asc" %}selected{% endif %}>Más antiguas primero</option>
+            </select>
+          </div>
+          <div>
+            <label class="fw-bold">Estado</label>
+            <select name="estado" class="form-select">
+              <option value="todos" {% if estado == "todos" %}selected{% endif %}>Todos</option>
+              {% for value, label in estados %}
+                <option value="{{ value }}" {% if estado == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="fw-bold">Tipo</label>
+            <select name="tipo" class="form-select">
+              <option value="todos" {% if tipo == "todos" %}selected{% endif %}>Todos</option>
+              {% for value, label in tipos %}
+                <option value="{{ value }}" {% if tipo == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger w-50">Buscar</button>
+            <a href="{% url 'mantenimiento' %}" class="btn btn-outline-secondary w-50">Limpiar</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle text-center">
+      <thead class="hola">
+        <tr>
+          <th>N° Orden</th>
+          <th>Tipo</th>
+          <th>Nodo/Subestación</th>
+          <th>Fecha</th>
+          <th>Estado</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for orden in ordenes %}
+        <tr>
+          <td>{{ orden.n_orden }}</td>
+          <td>{{ orden.get_tipo_display }}</td>
+          <td>
+            {% if orden.id_nodo %}
+              {{ orden.id_nodo.nodo }}
+            {% elif orden.id_subestacion %}
+              {{ orden.id_subestacion.nombre }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>{{ orden.fecha|date:"Y-m-d" }}</td>
+          <td>{{ orden.get_estado_orden_display }}</td>
+          <td>
+            {% if orden.tipo == "reco" %}
+              {% if orden.informe_reco %}
+                <a href="{% url 'ver_informe_reco' orden.id %}" class="btn btn-primary btn-sm">🔍 Ver Informe</a>
+              {% else %}
+                <button class="btn btn-secondary btn-sm disabled">🔍 Ver Informe</button>
+              {% endif %}
+            {% elif orden.tipo == "subestacion" %}
+              {% with informe=orden.subestacion_comu_informe_set.first %}
+                {% if informe %}
+                  <a href="{% url 'ver_informe_sub_comu' orden.id %}" class="btn btn-primary btn-sm">🔍 Ver Informe</a>
+                {% else %}
+                  <button class="btn btn-secondary btn-sm disabled">🔍 Ver Informe</button>
+                {% endif %}
+              {% endwith %}
+            {% else %}
+              <button class="btn btn-secondary btn-sm disabled">🔍 Ver Informe</button>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center py-4 text-muted">No hay órdenes registradas.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+function toggleFiltros() {
+  const panel = document.getElementById("filtros-panel");
+  panel.style.display = (panel.style.display === "none" || panel.style.display === "") ? "block" : "none";
+}
+document.addEventListener("click", function(event) {
+  const panel = document.getElementById("filtros-panel");
+  const boton = document.getElementById("btn-filtro");
+  if (panel.style.display === "block" && !panel.contains(event.target) && !boton.contains(event.target)) {
+    panel.style.display = "none";
+  }
+});
+setTimeout(() => {
+  const alertas = document.getElementById("alertas");
+  if (alertas) {
+    alertas.style.transition = "opacity 0.5s ease";
+    alertas.style.opacity = "0";
+    setTimeout(() => alertas.remove(), 500);
+  }
+}, 5000);
+</script>
+{% endblock %}

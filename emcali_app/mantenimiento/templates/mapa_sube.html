@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div style="display: flex; max-width: 1000px; margin: auto; border: 1px solid #ccc; border-radius: 10px; overflow: hidden; height: 600px;">
+    
+    <!-- Panel lateral con nodos -->
+    <div style="width: 250px; background: #f9f9f9; border-right: 1px solid #ddd; overflow-y: auto; padding: 10px;">
+        <h3 style="text-align: center; color: #d00000;">📋 Nodos</h3>
+        <ul id="lista-nodos" style="list-style: none; padding: 0; margin: 0;">
+            <!-- Los nodos se llenan desde JS -->
+        </ul>
+    </div>
+
+    <!-- Mapa -->
+    <div style="flex: 1;">
+        <div id="map" style="height: 100%; width: 100%;"></div>
+    </div>
+</div>
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+<script>
+    var map = L.map('map').setView([3.4516, -76.5320], 12);
+
+    // Cargar mapa base
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+    }).addTo(map);
+
+    var markers = L.markerClusterGroup();
+    var nodos = JSON.parse('{{ nodos|escapejs }}');
+    var markerRefs = {};
+    var lista = document.getElementById("lista-nodos");
+
+    // Guardar ubicación del usuario
+    var userLocation = null;
+    var userMarker = null;
+    var routeLayer = null;
+    var destinationMarker = null;
+
+    // Iconos personalizados
+    var greenIcon = L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
+        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    var redIcon = L.icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    // Pedir ubicación del usuario
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            userLocation = [position.coords.latitude, position.coords.longitude];
+            userMarker = L.marker(userLocation, {icon: greenIcon})
+                          .bindPopup("📍 Estás aquí")
+                          .addTo(map);
+            map.setView(userLocation, 14);
+        }, function() {
+            alert("No se pudo obtener tu ubicación.");
+        });
+    }
+
+    // Agregar nodos
+    nodos.forEach(function(nodo) {
+        if (nodo.latitud && nodo.longitud) {
+            var marker = L.marker([nodo.latitud, nodo.longitud])
+                .bindPopup("<b>" + nodo.nodo + "</b><br>" + (nodo.direccion ? nodo.direccion : ""));
+            
+            markers.addLayer(marker);
+            markerRefs[nodo.id_nodo] = marker;
+
+            var li = document.createElement("li");
+            li.textContent = nodo.nodo;
+            li.style.padding = "8px";
+            li.style.cursor = "pointer";
+            li.style.borderBottom = "1px solid #eee";
+
+            // Cuando el usuario hace clic en un nodo de la lista
+            li.onclick = function() {
+                map.setView([nodo.latitud, nodo.longitud], 15);
+                marker.openPopup();
+
+                if (userLocation) {
+                    // Eliminar ruta anterior y marcador de destino si existen
+                    if (routeLayer) map.removeLayer(routeLayer);
+                    if (destinationMarker) map.removeLayer(destinationMarker);
+
+                    // Marcar destino en rojo
+                    destinationMarker = L.marker([nodo.latitud, nodo.longitud], {icon: redIcon})
+                                         .bindPopup("📍 Destino: " + nodo.nodo)
+                                         .addTo(map);
+
+                    // Consultar ruta en OSRM
+                    var url = `https://router.project-osrm.org/route/v1/driving/${userLocation[1]},${userLocation[0]};${nodo.longitud},${nodo.latitud}?overview=full&geometries=geojson`;
+
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(data => {
+                            var route = data.routes[0].geometry;
+                            routeLayer = L.geoJSON(route, {color: "red", weight: 4}).addTo(map);
+                            map.fitBounds(routeLayer.getBounds());
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert("No se pudo calcular la ruta.");
+                        });
+                } else {
+                    alert("No se pudo obtener tu ubicación.");
+                }
+            };
+
+            lista.appendChild(li);
+        }
+    });
+
+    map.addLayer(markers);
+</script>
+{% endblock %}

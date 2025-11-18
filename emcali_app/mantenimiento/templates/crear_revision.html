@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Revisión de {{ categoria|title }} en {{ subestacion.nombre }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <!-- Preguntas dinámicas -->
+    {% for pregunta in preguntas %}
+        <div style="margin-bottom:15px;">
+            <label><b>{{ pregunta.texto }}</b></label><br>
+
+            {% if pregunta.tipo == "texto" %}
+                <input type="text" 
+                       name="pregunta_{{ pregunta.id }}" 
+                       value="{{ respuestas_temporales|get_item:'pregunta_'|add:pregunta.id|stringformat:'s' }}"
+                       style="width:100%; padding:6px;">
+
+            {% elif pregunta.tipo == "opcion" %}
+                <select name="pregunta_{{ pregunta.id }}" style="width:100%; padding:6px;">
+                    <option value="">-- Seleccione --</option>
+                    <option value="Bien"
+                        {% if respuestas_temporales|get_item:"pregunta_"|add:pregunta.id|stringformat:"s" == "Bien" %}selected{% endif %}>
+                        Bien
+                    </option>
+                    <option value="Mal"
+                        {% if respuestas_temporales|get_item:"pregunta_"|add:pregunta.id|stringformat:"s" == "Mal" %}selected{% endif %}>
+                        Mal
+                    </option>
+                </select>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p>No hay preguntas configuradas para {{ categoria|title }}.</p>
+    {% endfor %}
+
+    <!-- Botón -->
+    <div style="margin-top:20px; text-align:center;">
+        <button type="submit" style="padding:10px 20px; background:#27ae60; color:white; border:none; border-radius:5px;">
+            Guardar Respuestas de {{ categoria|title }}
+        </button>
+    </div>
+</form>
+
+<!-- Botón de volver -->
+<div style="margin-top:20px; text-align:center;">
+    <a href="{% url 'seleccionar_reporte' subestacion.id %}" 
+       style="padding:10px 20px; background:#7f8c8d; color:white; border:none; border-radius:5px; text-decoration:none;">
+       Volver a Selección
+    </a>
+</div>
+{% endblock %}

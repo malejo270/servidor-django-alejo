@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  /* Fondo con degradado */
+  body {
+    background: linear-gradient(135deg, #86e708, #ffd166, #06d6a0);
+    background-size: 400% 400%;
+    animation: moverFondo 10s ease infinite;
+  }
+
+  @keyframes moverFondo {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Efecto de entrada */
+  .fade-in {
+    animation: fadeIn 1.2s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Botones personalizados */
+  .btn-custom {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .btn-custom:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
+
+  /* Logo */
+  .logo-img {
+    max-width: 220px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+  }
+</style>
+
+<div class="d-flex flex-column justify-content-center align-items-center vh-100 text-center font-monospace fade-in">
+
+  <!-- Logo -->
+  <img src="{% static 'images/emcali-log.jpeg' %}" alt="Logo EMCALI" class="logo-img mb-5">
+
+  <!-- Título -->
+  <h2 class="text-white fw-bold mb-4 shadow-sm">⚡ Plataforma de Mantenimiento Energia</h2>
+
+  <!-- Botones -->
+  <a href="{% url 'mantenimiento' %}" 
+     class="btn btn-danger btn-lg fw-bold px-5 py-3 mb-3 rounded-3 btn-custom">
+     🔧 Comunicaciones
+  </a>
+
+  <a href="{% url 'lista_ordenes_subestacion' %}" 
+     class="btn btn-warning btn-lg fw-bold px-5 py-3 rounded-3 btn-custom text-dark">
+      Grupo Móvil
+  </a>
+
+  
+
+</div>
+
+{% endblock %}

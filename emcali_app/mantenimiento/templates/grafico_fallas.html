@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+  <h2 class="text-center mb-4 text-primary fw-bold">
+    Estadísticas de Fallas Identificadas
+  </h2>
+
+  <!-- FILTROS -->
+  <form method="get" class="row justify-content-center align-items-end mb-4 g-3">
+
+    <div class="col-md-4">
+      <label for="falla" class="form-label fw-semibold">Tipo de Falla:</label>
+      <select name="falla" id="falla" class="form-select">
+        <option value="">-- Todas --</option>
+        {% for valor, texto in opciones_fallas %}
+          <option value="{{ valor }}" {% if valor == falla_seleccionada %}selected{% endif %}>{{ texto }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label for="rango" class="form-label fw-semibold">Rango de Tiempo:</label>
+      <select name="rango" id="rango" class="form-select">
+        <option value="15d" {% if rango == '15d' %}selected{% endif %}>Últimos 15 días</option>
+        <option value="3m" {% if rango == '3m' %}selected{% endif %}>Últimos 3 meses</option>
+        <option value="12m" {% if rango == '12m' %}selected{% endif %}>Último año</option>
+      </select>
+    </div>
+
+    <div class="col-md-2 text-center">
+      <button type="submit" class="btn btn-success w-100">Filtrar</button>
+    </div>
+  </form>
+
+  <!-- GRÁFICO -->
+  <div class="card shadow border-0 rounded-4 p-4">
+    {{ grafico|safe }}
+  </div>
+</div>
+{% endblock %}

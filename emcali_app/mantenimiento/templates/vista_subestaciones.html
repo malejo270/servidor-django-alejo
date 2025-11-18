@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin: auto;">
+
+    <!-- Botón volver -->
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'lista_ordenes_subestacion' %}" 
+           style="background-color:#ffcc00; color:#000; padding:8px 16px; 
+                  text-decoration:none; border-radius:4px; font-weight:bold; display:inline-block;">
+            ← Volver
+        </a>
+    </div>
+
+    <!-- Título -->
+    <h2 style="text-align:center; margin-bottom:50px; font-size:28px; font-weight:700; color:#2c3e50;">
+         Lista de Subestaciones
+    </h2>
+
+    <!-- Botones de acciones -->
+    <div style="display:flex; align-items:center; margin-bottom: 40px;">
+        <!-- Botón Nueva Subestación a la izquierda -->
+        <a href="{% url 'crear_subestacion' %}" 
+           style="background-color:#27ae60; color:white; padding:10px 18px; 
+                  border-radius:8px; text-decoration:none; font-weight:600;">
+            ➕ Nueva Subestación
+        </a>
+
+        <!-- Botón Preguntas a la derecha -->
+        <a href="{% url 'lista_preguntas' %}" 
+           style="background-color:#8e44ad; color:white; padding:10px 18px; 
+                  border-radius:8px; text-decoration:none; font-weight:600; margin-left:auto; margin-right:15px;">
+               Preguntas
+        </a>
+
+        <!-- Botón Vista Operario -->
+        <a href="{% url 'subestaciones_operario' %}" 
+           style="background-color:#f39c12; color:white; padding:10px 18px; 
+                  border-radius:8px; text-decoration:none; font-weight:600;">
+               Vista Operario
+        </a>
+    </div>
+
+    {% if subestaciones %}
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:20px;">
+            {% for s in subestaciones %}
+                <div style="background:white; padding:20px; border-radius:12px; 
+                            box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+
+                    <h3 style="margin:0; color:#2c3e50; font-size:20px;">⚡ {{ s.nombre }}</h3>
+                    <p style="margin:5px 0; color:#555;">📍 {{ s.ubicacion }}</p>
+                    <p style="font-size:14px; color:#888;">ID: {{ s.id }}</p>
+
+                    <div style="margin-top:15px;">
+                        <a href="{% url 'editar_subestacion' s.id %}" 
+                           style="background-color:#2980b9; color:white; padding:8px 12px; 
+                                  border-radius:6px; text-decoration:none; margin-right:5px;">
+                            ✏️ Editar
+                        </a>
+                        <a href="#" 
+                           style="background-color:#c0392b; color:white; padding:8px 12px; 
+                                  border-radius:6px; text-decoration:none;">
+                            🗑️ Eliminar
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p style="text-align:center; color:#888; font-size:16px; margin-top:20px;">
+            No hay subestaciones registradas.
+        </p>
+    {% endif %}
+
+</div>
+{% endblock %}

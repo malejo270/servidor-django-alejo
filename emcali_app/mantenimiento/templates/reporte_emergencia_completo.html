@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+    <!-- Botón de volver -->
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'lista_ordenes' %}" 
+           style="background-color: #ffcc00; color: #000; padding: 8px 16px; text-decoration: none; 
+                  border-radius: 4px; font-weight: bold; display: inline-block;">
+            ← Volver
+        </a>
+    </div>
+
+    <h2 style="color: #d00000; text-align: center; margin-bottom: 30px;">
+        🚨 Reporte de Emergencia
+    </h2>
+
+    <form method="post" style="background: #fff; padding: 30px 40px; border-left: 6px solid #ffcc00; 
+                                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+        {% csrf_token %}
+
+        {% if messages %}
+        <div style="margin-bottom: 20px;">
+            {% for message in messages %}
+                {% if message.tags == 'error' %}
+                    <div style="padding:10px; border-radius:5px; margin-bottom:10px; background-color:#f8d7da; color:#721c24;">
+                        {{ message }}
+                    </div>
+                {% elif message.tags == 'success' %}
+                    <div style="padding:10px; border-radius:5px; margin-bottom:10px; background-color:#d4edda; color:#155724;">
+                        {{ message }}
+                    </div>
+                {% else %}
+                    <div style="padding:10px; border-radius:5px; margin-bottom:10px; background-color:#e2e3e5; color:#41464b;">
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Tipo de reporte -->
+        <div style="margin-bottom: 20px;">
+            <label for="tipo" style="font-weight: bold;">Tipo de Reporte:</label>
+            <select name="tipo" id="tipo" required 
+                    style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-top:6px;">
+                <option value="">-- Selecciona el tipo --</option>
+                <option value="subestacion">Subestación</option>
+                <option value="reco">Reconectador</option>
+            </select>
+        </div>
+
+        <!-- Nodo / Subestación relacionado -->
+        <div id="seccion-nodo" style="display:none; margin-bottom: 20px;">
+            <label for="nodo_nombre" id="label_nodo" style="font-weight: bold;"></label>
+            <input name="nodo_nombre" id="nodo_nombre"
+                   placeholder=""
+                   style="width: 100%; padding: 8px; margin-top: 6px; border: 1px solid #ccc; border-radius: 4px;">
+
+            <datalist id="lista_nodos">
+                {% for nodo in nodos %}
+                    <option value="{{ nodo.nodo }}">
+                {% endfor %}
+            </datalist>
+
+            <datalist id="lista_subestaciones">
+                {% for sub in subestaciones %}
+                    <option value="{{ sub.nombre }}">
+                {% endfor %}
+            </datalist>
+        </div>
+
+        <!-- SECCIÓN RECO -->
+        <div id="seccion-reco" style="display:none; margin-top: 10px;">
+            <div style="margin-bottom: 20px;">
+                <label for="falla_identificada" style="font-weight: bold;">Falla Identificada:</label>
+                <select id="falla_identificada" name="falla_identificada" 
+                        style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="">-- Selecciona una falla --</option>
+                    <option value="falta_tension_ac">Falta tensión AC</option>
+                    <option value="modem_apagado">Modem apagado</option>
+                    <option value="display_no_prende">Display caja de control no prende</option>
+                    <option value="breaker_abierto">Breaker de alimentación AC abierto</option>
+                    <option value="fuente_dc_apagada">Fuente externa DC apagada</option>
+                    <option value="caja_bloqueada">Caja de control bloqueada</option>
+                    <option value="falta_antena">Falta antena</option>
+                    <option value="antena_caida">Antena caída</option>
+                    <option value="modem_no_comunica">Modem no comunica</option>
+                    <option value="falla_fibra">Falla en fibra óptica</option>
+                    <option value="desconocida">Desconocida</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="causa_falla" style="font-weight: bold;">Causa de la Falla:</label>
+                <textarea id="causa_falla" name="causa_falla"
+                          style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="trabajo_realizado" style="font-weight: bold;">Trabajo Realizado:</label>
+                <textarea id="trabajo_realizado" name="trabajo_realizado"
+                          style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;"></textarea>
+            </div>
+        </div>
+
+        <!-- SECCIÓN SUBESTACIÓN -->
+        <div id="seccion-sub" style="display:none; margin-top: 10px;">
+            <div style="margin-bottom: 20px;">
+                <label for="trabajo_realizado_sub_comu" style="font-weight: bold;">Trabajo realizado (Comunicaciones Subestación):</label>
+                <textarea id="trabajo_realizado_sub_comu" name="trabajo_realizado_sub_comu"
+                          style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label for="otras_observaciones" style="font-weight: bold;">Otras observaciones (opcional):</label>
+                <textarea id="otras_observaciones" name="otras_observaciones"
+                          style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc;"></textarea>
+            </div>
+        </div>
+
+        <!-- LAT/LONG ocultos -->
+        <input type="hidden" id="latitud" name="latitud">
+        <input type="hidden" id="longitud" name="longitud">
+
+        <!-- Botón guardar -->
+        <button id="btn-guardar" type="submit" 
+                style="display:none; width: 100%; background-color: #d00000; color: white; padding: 12px; font-weight: bold; 
+                       border: none; border-radius: 5px; font-size: 16px;">
+            Guardar Reporte
+        </button>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tipoSelect = document.getElementById('tipo');
+    const inputNodo = document.getElementById('nodo_nombre');
+    const labelNodo = document.getElementById('label_nodo');
+    const seccionNodo = document.getElementById('seccion-nodo');
+    const seccionReco = document.getElementById('seccion-reco');
+    const seccionSub = document.getElementById('seccion-sub');
+    const btnGuardar = document.getElementById('btn-guardar');
+
+    function onTipoChange() {
+        const val = tipoSelect.value;
+        if (val === "subestacion") {
+            seccionNodo.style.display = "block";
+            labelNodo.textContent = "Seleccione la Subestación:";
+            inputNodo.setAttribute("list", "lista_subestaciones");
+            inputNodo.placeholder = "Escriba el nombre de la subestación...";
+            seccionSub.style.display = 'block';
+            seccionReco.style.display = 'none';
+            btnGuardar.style.display = 'block';
+        } else if (val === "reco") {
+            seccionNodo.style.display = "block";
+            labelNodo.textContent = "Seleccione el Nodo:";
+            inputNodo.setAttribute("list", "lista_nodos");
+            inputNodo.placeholder = "Escriba el número del nodo...";
+            seccionSub.style.display = 'none';
+            seccionReco.style.display = 'block';
+            btnGuardar.style.display = 'block';
+        } else {
+            seccionNodo.style.display = "none";
+            inputNodo.removeAttribute("list");
+            inputNodo.placeholder = "";
+            seccionSub.style.display = 'none';
+            seccionReco.style.display = 'none';
+            btnGuardar.style.display = 'none';
+        }
+    }
+
+    tipoSelect.addEventListener('change', onTipoChange);
+    onTipoChange();
+
+    // 👉 Capturar ubicación automáticamente al cargar
+    getLocation();
+});
+
+// Obtener ubicación con GPS del navegador
+function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+            document.getElementById('latitud').value = position.coords.latitude.toFixed(7);
+            document.getElementById('longitud').value = position.coords.longitude.toFixed(7);
+            console.log("Ubicación obtenida automáticamente ✅");
+        }, function (error) {
+            console.warn("No se pudo obtener la ubicación: " + error.message);
+        });
+    } else {
+        console.warn("Tu navegador no soporta geolocalización.");
+    }
+}
+</script>
+{% endblock %}

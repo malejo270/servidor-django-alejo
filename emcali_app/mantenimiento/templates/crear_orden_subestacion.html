@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+    <!-- Botón volver -->
+    <div style="margin-bottom: 10px;">
+        <a href="{% url 'mantenimiento' %}" 
+           style="background-color: #ffcc00; color: #000; padding: 8px 16px; 
+                  text-decoration: none; border-radius: 4px; font-weight: bold;">
+            ← Volver
+        </a>
+    </div>
+
+    <!-- Contenedor del formulario -->
+    <div style="background: #fff; padding: 30px 40px; border-left: 6px solid #ffcc00; 
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+        <h2 style="color: #d00000; text-align: center; margin-bottom: 30px;">
+            Crear Orden de Subestación
+        </h2>
+
+        <!-- Mostrar errores generales del formulario -->
+        {% if form.errors %}
+            <div style="background: #ffe6e6; border: 1px solid #d00000; 
+                        color: #d00000; padding: 10px; border-radius: 5px; 
+                        margin-bottom: 20px;">
+                Por favor corrige los errores marcados abajo.
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Número de Orden -->
+            <div style="margin-bottom: 20px;">
+                {{ form.numero_orden_sube.label_tag }}
+                {{ form.numero_orden_sube }}
+                {% if form.numero_orden_sube.errors %}
+                    <div style="color: red; font-size: 14px;">
+                        {{ form.numero_orden_sube.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Descripción -->
+            <div style="margin-bottom: 20px;">
+                {{ form.descripcion_orden_sube.label_tag }}
+                {{ form.descripcion_orden_sube }}
+                {% if form.descripcion_orden_sube.errors %}
+                    <div style="color: red; font-size: 14px;">
+                        {{ form.descripcion_orden_sube.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Subestación -->
+            <div style="margin-bottom: 20px;">
+                {{ form.id_subestacion.label_tag }}
+                {{ form.id_subestacion }}
+                {% if form.id_subestacion.errors %}
+                    <div style="color: red; font-size: 14px;">
+                        {{ form.id_subestacion.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Botón Guardar -->
+            <button type="submit" 
+                    style="width: 100%; background-color: #d00000; color: white; 
+                           padding: 12px; font-weight: bold; border: none; 
+                           border-radius: 5px; font-size: 16px;">
+                Guardar Orden
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

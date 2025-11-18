@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div style="max-width: 1100px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+    <h2 style="color: #d00000; text-align: center; margin-bottom: 20px;">Vista General de Recos</h2>
+
+    <!-- Botón volver -->
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'lista_ordenes' %}" 
+           style="background-color: #ffcc00; color: #000; padding: 8px 16px; 
+                  text-decoration: none; border-radius: 4px; font-weight: bold;">
+            ← Volver
+        </a>
+    </div>
+
+    <!-- Controles superiores: filtro y buscador -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+        
+        <!-- Botón que abre/cierra filtros -->
+        <button onclick="toggleFiltro()" 
+                style="background-color: #ffcc00; color: #000; padding: 8px 14px; border: none;
+                       border-radius: 6px; cursor: pointer; font-weight: bold;">
+            <span style="margin-right: 6px;">🔽</span> Filtros
+        </button>
+
+        <!-- Buscador -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="text" id="buscador" placeholder="Buscar por nodo..." 
+                   style="padding: 8px; width: 230px; border: 1px solid #ccc; border-radius: 6px;">
+            <button onclick="buscar()" 
+                    style="padding: 8px 14px; background-color: #0056b3; color: white; border: none;
+                           border-radius: 6px; cursor: pointer;">
+                Buscar
+            </button>
+            <a href="{% url 'vista_general_recos' %}" 
+               title="Recargar"
+               style="font-size: 20px; text-decoration: none; color: #6c757d;">
+                🔄
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtro por tecnología (oculto inicialmente) -->
+    <div id="filtroTecnologia" 
+         style="display: none; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 6px;">
+        <strong>Filtrar por tecnología:</strong><br>
+        <label><input type="checkbox" class="filtro-tec" value="Vacías" checked> (Vacías)</label><br>
+        <label><input type="checkbox" class="filtro-tec" value="204" checked> 204</label><br>
+        <label><input type="checkbox" class="filtro-tec" value="ADSL" checked> ADSL</label><br>
+        <label><input type="checkbox" class="filtro-tec" value="FIBRA" checked> FIBRA</label><br>
+        <label><input type="checkbox" class="filtro-tec" value="N/A" checked> N/A</label><br>
+        <label><input type="checkbox" class="filtro-tec" value="NA" checked> NA</label><br>
+        <label><input type="checkbox" class="filtro-tec" value="TIGO" checked> TIGO</label><br>
+        <label><input type="checkbox" class="filtro-tec" value="UMTS" checked> UMTS</label><br>
+        <label><input type="checkbox" class="filtro-tec" value="WOM" checked> WOM</label><br>
+    </div>
+
+    <!-- Tabla de datos -->
+    <table id="tabla" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <thead>
+            <tr style="background-color: #ffcc00; color: black;">
+                <th style="padding: 12px; border: 1px solid #ddd;">Nodo</th>
+                <th style="padding: 12px; border: 1px solid #ddd;">Marca Reconectador</th>
+                <th style="padding: 12px; border: 1px solid #ddd;">Tecnología modem</th>
+                <th style="padding: 12px; border: 1px solid #ddd;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for nodo in nodos %}
+                {% for reco in nodo.reconectador_set.all %}
+                    {% for comunicacion in reco.comunicacion_set.all %}
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;">{{ nodo.nodo }}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">{{ reco.marca }}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd;">{{ comunicacion.tecnologia }}</td>
+                            <td style="padding: 10px; border: 1px solid #ddd; text-align: center;">
+                                <a href="{% url 'lista_recos_comunicaciones' nodo.id_nodo %}?from=vista_general_recos_ope" 
+   style="background-color: #1abc9c; color: white; padding: 6px 10px; border-radius: 4px;
+          text-decoration: none; margin-right: 6px;">
+    Ver
+</a>
+
+                                {% if comunicacion.id_comunicacion %}
+                                    <a href="{% url 'historico_trabajos' comunicacion.id_comunicacion %}" 
+                                       style="background-color: #6c5ce7; color: white; padding: 6px 10px; border-radius: 4px;
+                                              text-decoration: none;">
+                                        Histórico
+                                    </a>
+                                {% else %}
+                                    <span style="background-color: #ccc; color: white; padding: 6px 10px; border-radius: 4px;
+                                                 text-decoration: none; cursor: not-allowed;">
+                                        Histórico
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 12px;">No hay datos disponibles.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Mostrar/ocultar filtro por tecnología
+    function toggleFiltro() {
+        const filtro = document.getElementById("filtroTecnologia");
+        filtro.style.display = (filtro.style.display === "none" || filtro.style.display === "") ? "block" : "none";
+    }
+
+    // Filtrar por texto
+    function buscar() {
+        const input = document.getElementById("buscador").value.toLowerCase();
+        const filas = document.querySelectorAll("#tabla tbody tr");
+        filas.forEach(function(fila) {
+            const nodo = fila.cells[0].textContent.toLowerCase();
+            fila.style.display = nodo.includes(input) ? "" : "none";
+        });
+    }
+
+    // Filtrar por tecnología
+    document.querySelectorAll(".filtro-tec").forEach(function(checkbox) {
+        checkbox.addEventListener("change", filtrarTecnologia);
+    });
+
+    function filtrarTecnologia() {
+        const seleccionadas = Array.from(document.querySelectorAll(".filtro-tec:checked")).map(cb => cb.value.toLowerCase());
+        const filas = document.querySelectorAll("#tabla tbody tr");
+        filas.forEach(function(fila) {
+            const tecnologia = fila.cells[2].textContent.toLowerCase().trim();
+            fila.style.display = seleccionadas.includes(tecnologia) || (tecnologia === "" && seleccionadas.includes("vacías".toLowerCase())) ? "" : "none";
+        });
+    }
+</script>
+
+{% endblock %}

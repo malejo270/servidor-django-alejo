@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+    <!-- Botón de volver -->
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'vista_general_recos' %}" 
+           style="background-color: #ffcc00; color: #000; padding: 8px 16px; 
+                  text-decoration: none; border-radius: 4px; font-weight: bold;">
+            ← Volver
+        </a>
+    </div>
+
+    <h2 style="text-align: center; color: #d00000; margin-bottom: 30px;">Editar Reco y Comunicación</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'success' in message.tags %}
+                <div style="padding: 12px 16px; border-radius: 5px; font-weight: bold; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                    {{ message }}
+                </div>
+            {% elif 'error' in message.tags %}
+                <div style="padding: 12px 16px; border-radius: 5px; font-weight: bold; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                    {{ message }}
+                </div>
+            {% else %}
+                <div style="padding: 12px 16px; border-radius: 5px; font-weight: bold; background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; margin-bottom: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    <!-- FORMULARIO -->
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- 📸 Foto del reco -->
+        {% if reco %}
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h4 style="color: #0056b3; margin-bottom: 15px;">Foto del Reconectador</h4>
+
+            {% if reco.foto %}
+                <img src="{{ reco.foto.url }}" alt="Foto del reconectador" 
+                     style="max-width: 300px; max-height: 300px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 15px;">
+                <p style="color: #555; font-size: 14px;">Puedes reemplazar la foto con una nueva:</p>
+            {% else %}
+                <p style="color: #555; font-size: 14px;">No hay foto cargada. Sube una:</p>
+            {% endif %}
+
+            <input type="file" name="foto" style="margin-top: 10px;">
+        </div>
+        {% endif %}
+
+        <div style="display: flex; gap: 30px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 8px; padding: 25px;">
+            {% if reco %}
+            <div style="flex: 1;">
+                <h4 style="color: #0056b3; margin-bottom: 15px;">Reconectador</h4>
+                <label><strong>   Activo reco</strong></label>
+                <input type="text" name="activo_reco" value="{{ reco.activo_reco }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <label><strong>  Sn activo</strong></label>
+                <input type="text" name="sn_activo" value="{{ reco.sn_activo }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <label><strong>N° Equipo:</strong></label>
+                <input type="text" name="n_equipo" value="{{ reco.n_equipo }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Serial:</strong></label>
+                <input type="text" name="serial_reco" value="{{ reco.serial_reco }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Modelo:</strong></label>
+                <input type="text" name="modelo" value="{{ reco.modelo }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Marca:</strong></label>
+                <input type="text" name="marca" value="{{ reco.marca }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Fecha Instalación:</strong></label>
+                <input type="date" name="fecha_instalacion" value="{{ reco.fecha_instalacion|date:'Y-m-d' }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Responsable:</strong></label>
+                <input type="text" name="responsable" value="{{ reco.responsable }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Estado Batería:</strong></label>
+                <input type="text" name="estado_bateria" value="{{ reco.estado_bateria }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Serial Batería:</strong></label>
+                <input type="text" name="serial_bateria" value="{{ reco.serial_bateria }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Estado Reco:</strong></label>
+                <input type="text" name="estado_reconectador" value="{{ reco.estado_reconectador }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Icc:</strong></label>
+                <input type="text" name="Icc" value="{{ reco.Icc }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            </div>
+            {% endif %}
+
+            {% if comunicacion %}
+            <div style="flex: 1;">
+                <h4 style="color: #1abc9c; margin-bottom: 15px;">Comunicación</h4>
+                <label><strong> Activo modem:</strong></label>
+                <input type="text" name="activo_modem" value="{{ comunicacion.activo_modem }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <label><strong>Modem:</strong></label>
+                <input type="text" name="modem" value="{{ comunicacion.modem }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                 <label><strong>Serial Modem:</strong></label>
+                <input type="text" name="serial_modem" value="{{ comunicacion.serial_modem }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <label><strong>IP:</strong></label>
+                <input type="text" name="ip" value="{{ comunicacion.ip }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>IP Vieja:</strong></label>
+                <input type="text" name="ip_vieja" value="{{ comunicacion.ip_vieja }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>ASDU:</strong></label>
+                <input type="text" name="asdu" value="{{ comunicacion.asdu }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Estado:</strong></label>
+                <input type="text" name="estado" value="{{ comunicacion.estado }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Tecnología:</strong></label>
+                <input type="text" name="tecnologia" value="{{ comunicacion.tecnologia }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                <label><strong>Estado Actividad:</strong></label>
+                <input type="text" name="estado_actividad" value="{{ comunicacion.estado_actividad }}" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+
+                
+            </div>
+            {% endif %}
+        </div>
+
+        <button type="submit" 
+                style="margin-top: 30px; background-color: #d00000; color: white; 
+                       padding: 12px 20px; font-weight: bold; border: none; 
+                       border-radius: 6px; font-size: 16px; width: 100%;">
+            Guardar Cambios
+        </button>
+    </form>
+</div>
+{% endblock %}

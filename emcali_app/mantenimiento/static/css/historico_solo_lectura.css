@@ -1,0 +1,64 @@
+.historico-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    font-family: Arial, sans-serif;
+}
+
+/* Botones superiores */
+.top-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.btn-volver {
+    padding: 8px 16px;
+    background-color: #ffcc00;
+    color: #000;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+.btn-emergencia {
+    padding: 10px 18px;
+    background-color: #d00000;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: bold;
+}
+
+/* Título */
+.historico-titulo {
+    color: #d00000;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Info nodo y reco */
+.info-nodo-reco {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Contenedor de informes */
+.informes-container h3 {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.informe-card {
+    background: #fff;
+    border-left: 5px solid #0056b3;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+/* Texto cuando no hay informes */
+.no-informes {
+    color: gray;
+}

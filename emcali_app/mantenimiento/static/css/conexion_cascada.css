@@ -1,0 +1,76 @@
+.nodos-container {
+    max-width: 1000px;
+    margin: 30px auto;
+    font-family: Arial, sans-serif;
+}
+
+/* Botón volver */
+.btn-volver-container {
+    margin-bottom: 20px;
+}
+
+.btn-volver {
+    background-color: #ffcc00;
+    color: black;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    display: inline-block;
+}
+
+/* Título */
+.titulo {
+    text-align: center;
+    color: #d00000;
+    margin-bottom: 30px;
+}
+
+/* Card de Nodo */
+.nodo-card {
+    border: 2px solid #ffcc00;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    background: #fff;
+}
+
+.nodo-card h3 {
+    color: #333;
+}
+
+/* Card de Reco */
+.reco-card {
+    margin-left: 20px;
+    padding: 15px;
+    border-left: 4px solid #0077cc;
+    background: #fafafa;
+    border-radius: 6px;
+    margin-top: 10px;
+}
+
+.reco-card h4 {
+    color: #0077cc;
+}
+
+/* Card de Comunicación */
+.com-card {
+    margin-left: 20px;
+    padding: 10px;
+    border-left: 4px solid #00aa88;
+    background: #f5fdfb;
+    border-radius: 6px;
+    margin-top: 8px;
+}
+
+.com-card h5 {
+    color: #00aa88;
+}
+
+/* Mensajes vacíos */
+.mensaje-vacio {
+    margin-left: 20px;
+    color: #666;
+    font-style: italic;
+}

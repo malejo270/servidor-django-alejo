@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>📋 Resumen de la Revisión - {{ subestacion.nombre }}</h2>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">📝 Información General</h5>
+        </div>
+        <div class="card-body">
+            <p><strong>Fecha de revisión:</strong> {{ revision.fecha|date:"d/m/Y H:i" }}</p>
+            <p><strong>Subestación:</strong> {{ subestacion.nombre }}</p>
+            <p><strong>Ubicación:</strong> {{ subestacion.ubicacion }}</p>
+            <p><strong>Total de respuestas:</strong> {{ total_respuestas }}</p>
+            <p><strong>Observaciones generales:</strong> 
+                {% if revision.observaciones_generales %}
+                    {{ revision.observaciones_generales }}
+                {% else %}
+                    <span class="text-muted">No hay observaciones registradas</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    {% if total_respuestas == 0 %}
+    <div class="alert alert-info">
+        <h4>📭 No hay respuestas registradas</h4>
+        <p>No se encontraron respuestas para esta revisión.</p>
+    </div>
+    {% endif %}
+
+    {% for categoria, componentes in resumen.items %}
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0">
+                📊 Categoría: {{ categoria|title }}
+                <span class="badge bg-light text-dark float-end">{{ componentes|length }} componente(s)</span>
+            </h5>
+        </div>
+        
+        <div class="card-body">
+            {% if componentes %}
+                {% for componente, respuestas in componentes.items %}
+                <div class="componente-section mb-4 p-3 border rounded">
+                    <h6 class="componente-title mb-3">
+                        🔧 {{ componente }}
+                        <span class="badge bg-info float-end">{{ respuestas|length }} respuesta(s)</span>
+                    </h6>
+                    
+                    <div class="respuestas-list">
+                        {% for resp in respuestas %}
+                        <div class="respuesta-item mb-2 p-2 bg-light rounded">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <strong class="text-dark">{{ resp.pregunta.texto }}</strong>
+                                    {% if resp.pregunta.padre %}
+                                        <br>
+                                        <small class="text-muted">
+                                            📁 Grupo: {{ resp.pregunta.padre.texto }}
+                                        </small>
+                                    {% endif %}
+                                </div>
+                                <div class="ms-3">
+                                    <span class="badge {% if resp.respuesta == 'Bien' %}bg-success{% elif resp.respuesta == 'Mal' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        {{ resp.respuesta|default:"No respondida" }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No se registraron componentes en esta categoría.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if not resumen %}
+    <div class="alert alert-warning">
+        <h4>📋 No hay categorías registradas</h4>
+        <p>No se encontraron respuestas organizadas por categorías.</p>
+    </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'subestaciones_operario' %}" class="btn btn-secondary">
+            ⬅ Volver a Subestaciones
+        </a>
+        <a href="{% url 'lista_ordenes_subestacion' %}" class="btn btn-outline-primary ms-2">
+            📋 Ver todas las órdenes
+        </a>
+    </div>
+</div>
+
+<style>
+    .componente-section {
+        border-left: 4px solid #3498db;
+        background-color: #f8f9fa;
+    }
+    
+    .componente-title {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .respuesta-item {
+        transition: background-color 0.2s;
+    }
+    
+    .respuesta-item:hover {
+        background-color: #e9ecef !important;
+    }
+    
+    .badge {
+        font-size: 0.8em;
+    }
+</style>
+{% endblock %}

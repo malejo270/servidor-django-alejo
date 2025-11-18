@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Historial de revisiones por Nodo</h2>
+
+<form method="get" action="">
+    <input type="text" name="q" placeholder="Buscar nodo..." value="{{ query }}" class="form-control" style="width:300px; display:inline-block;">
+    <button type="submit" class="btn btn-primary">Buscar</button>
+</form>
+
+{% if nodo %}
+    <h3 style="margin-top:20px;">Nodo: {{ nodo.nodo }}</h3>
+
+    {% if informes %}
+        <div style="margin-top:20px;">
+            {{ grafico_html|safe }}
+        </div>
+
+        <table class="table table-bordered" style="margin-top:20px;">
+            <thead>
+                <tr>
+                    <th>Fecha de inicio</th>
+                    <th>Fecha de cierre</th>
+                    <th>Falla identificada</th>
+                    <th>Trabajo realizado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for informe in informes %}
+                <tr>
+                    <td>{{ informe.inicio_actividad|date:"d/m/Y H:i" }}</td>
+                    <td>{{ informe.hora_cierre|date:"d/m/Y H:i" }}</td>
+                    <td>{{ informe.falla_identificada }}</td>
+                    <td>{{ informe.trabajo_realizado }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No se encontraron revisiones para este nodo.</p>
+    {% endif %}
+{% elif query %}
+    <p>No se encontró ningún nodo con ese nombre.</p>
+{% endif %}
+{% endblock %}

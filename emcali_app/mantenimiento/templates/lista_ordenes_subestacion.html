@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  /* 🎨 Encabezado de la tabla */
+  .orden_color {
+    background-color: #A23B24 !important; /* Azul suave */
+    color: #000 !important; /* Texto negro para contraste */
+  }
+  .orden_color th {
+    background-color:#004e70!important;
+    color: white !important;
+    font-weight: bold;
+  }
+
+  /* 🔹 Asegura que el encabezado no herede otros estilos */
+  .table thead.orden_color {
+    background-color: #A23B24 !important;
+  }
+</style>
+<a href="{% url 'ordenes_subestacion_operario' %}" class="btn btn-primary fw-bold  gap-1">
+       Vista jefe
+    </a>
+<div class="container py-4">
+
+  <!-- 🔹 Botones superiores -->
+  
+
+  <!-- 🔹 Título -->
+  <h2 class="text-center text-dark fw-bold mb-4">Órdenes de Subestación</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <a href="{% url 'crear_orden_subestacion' %}" class="btn btn-primary fw-bold d-flex align-items-center gap-1">
+      <i class="bi bi-plus-lg"></i> Crear Orden
+    </a>
+    
+    <a href="{% url 'subestaciones' %}" class="btn btn-secondary fw-bold d-flex align-items-center gap-1">
+       Subestaciones
+    </a>
+
+    
+  </div>
+  <!-- 🔹 Tabla -->
+  {% if ordenes %}
+  <div class="table-responsive shadow-sm rounded">
+    <table class="table table-bordered table-hover align-middle text-center">
+      <thead class="orden_color">
+        <tr>
+          <th>N° Orden</th>
+          <th>Descripción</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Subestación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for orden in ordenes %}
+        <tr>
+          <td class="fw-semibold">{{ orden.numero_orden_sube }}</td>
+          <td>{{ orden.descripcion_orden_sube|truncatewords:15 }}</td>
+          <td>{{ orden.estado_orden }}</td>
+          <td>{{ orden.fecha }}</td>
+          <td>{{ orden.id_subestacion.nombre }}</td>
+          <td>
+            {% if orden.revision %}
+              <a href="{% url 'resumen_revision' orden.pk %}" class="btn btn-primary btn-sm">
+                🔍 Ver Informe
+              </a>
+            {% else %}
+              <button class="btn btn-secondary btn-sm d-inline-flex align-items-center gap-1" disabled>
+                <i class="bi bi-file-earmark-x"></i> Sin Informe
+              </button>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center text-muted mt-4">
+    <i class="bi bi-info-circle"></i> No hay órdenes creadas aún.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

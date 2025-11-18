@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+
+  <!-- 🔹 Título -->
+  <h2 class="text-center text-success fw-bold mb-5 display-6">
+    Vista General de Reconectadores
+  </h2>
+
+  <!-- 🔹 Bloque de mensajes -->
+  {% if messages %}
+  <div id="messages-container" class="mb-4">
+    {% for message in messages %}
+    <div class="alert 
+      {% if message.tags == 'success' %}alert-success
+      {% elif message.tags == 'error' %}alert-danger
+      {% elif message.tags == 'warning' %}alert-warning
+      {% else %}alert-info
+      {% endif %} 
+      shadow-sm rounded-3 py-2 mb-2">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- 🔹 Botón Volver -->
+
+
+  <!-- 🔹 Controles Superiores -->
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
+    <!-- Botones de acción -->
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{% url 'crear_nodo' %}" class="btn btn-success shadow-sm">
+        + Nuevo Nodo
+      </a>
+      <a href="{% url 'crear_reco' %}" class="btn btn-primary shadow-sm">
+        + Nuevo Reco
+      </a>
+      <a href="{% url 'crear_comunicacion' %}" class="btn btn-info text-white shadow-sm">
+        + Nueva Comunicación
+      </a>
+    </div>
+
+    <!-- Buscador -->
+    <div class="d-flex align-items-center gap-2">
+      <input type="text" id="buscador" class="form-control rounded-pill shadow-sm" 
+             placeholder="Buscar por nodo..." style="max-width: 230px;">
+      <button onclick="buscar()" class="btn btn-primary shadow-sm">
+        Buscar
+      </button>
+      <a href="{% url 'vista_general_recos' %}" title="Recargar" 
+         class="fs-4 text-secondary text-decoration-none ms-1">
+        🔄
+      </a>
+    </div>
+  </div>
+
+  <!-- 🔹 Tabla -->
+  <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+    <div class="table-responsive">
+      <table id="tabla" class="table table-hover align-middle mb-0">
+        <thead class="table-warning text-dark text-center align-middle">
+          <tr>
+            <th scope="col">Nodo</th>
+            <th scope="col">Marca Reconectador</th>
+            <th scope="col">Comunicación Modem</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for nodo in nodos %}
+            {% if nodo.reconectador_set.exists %}
+              {% for reco in nodo.reconectador_set.all %}
+                {% if reco.comunicacion_set.exists %}
+                  {% for comunicacion in reco.comunicacion_set.all %}
+                  <tr>
+                    <td class="fw-semibold">{{ nodo.nodo }}</td>
+                    <td>{{ reco.marca }}</td>
+                    <td>{{ comunicacion.modem }}</td>
+                    <td class="text-center">
+                      <div class="d-flex justify-content-center flex-wrap gap-2">
+                        <a href="{% url 'lista_recos_comunicaciones' nodo.id_nodo %}?from=vista_general_recos" class="btn btn-success btn-sm">Ver</a>
+                        <a href="{% url 'editar_nodo_reco_comunicacion' nodo.id_nodo %}" class="btn btn-primary btn-sm">Editar</a>
+                        <a href="{% url 'eliminar_comunicacion' comunicacion.id_comunicacion %}" 
+                           onclick="return confirm('¿Estás seguro de eliminar esta comunicación?');" 
+                           class="btn btn-danger btn-sm">Eliminar</a>
+                        <a href="{% url 'historicos_recos' comunicacion.id_comunicacion %}" 
+                           class="btn btn-secondary btn-sm">Histórico</a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td class="fw-semibold">{{ nodo.nodo }}</td>
+                    <td>{{ reco.marca }}</td>
+                    <td class="text-muted fst-italic">Sin comunicación</td>
+                    <td class="text-center">
+                      <div class="d-flex justify-content-center flex-wrap gap-2">
+                        <a href="{% url 'lista_recos_comunicaciones' nodo.id_nodo %}?from=vista_general_recos" class="btn btn-primary btn-sm">Ver</a>
+                        <a href="{% url 'editar_nodo_reco_comunicacion' nodo.id_nodo %}" class="btn btn-primary btn-sm">Editar</a>
+                        <a href="{% url 'crear_comunicacion' %}?reco={{ reco.id_reco }}" 
+                           class="btn btn-info btn-sm text-white">Agregar Comunicación</a>
+
+                        <!-- ✅ Botón Histórico siempre visible -->
+                        <a href="{% url 'historicos_recos' reco.id_reco %}" 
+                           class="btn btn-secondary btn-sm">Histórico</a>
+                      </div>
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td class="fw-semibold">{{ nodo.nodo }}</td>
+                <td colspan="3" class="text-center text-muted fst-italic">
+                  Este nodo no tiene recos
+                </td>
+              </tr>
+            {% endif %}
+          {% empty %}
+            <tr>
+              <td colspan="4" class="text-center py-3 text-muted">
+                No hay datos disponibles.
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Archivos estáticos -->
+<link rel="stylesheet" href="{% static 'css/vista_general_recos.css' %}">
+<script src="{% static 'js/vista_general_recos.js' %}"></script>
+{% endblock %}

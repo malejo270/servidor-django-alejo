@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+/* ===========================
+   Estilos generales
+=========================== */
+.container-ordenes {
+    max-width: 1000px;
+    margin: 40px auto;
+    font-family: Arial, sans-serif;
+}
+
+/* ===========================
+   Título principal
+=========================== */
+.titulo-principal {
+    text-align: center;
+    color: #d00000;
+    margin-bottom: 20px;
+}
+
+/* ===========================
+   Estilos mensajes Django
+=========================== */
+.alert {
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.alert-error { color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; }
+.alert-success { color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; }
+.alert-info { color: #0c5460; background-color: #d1ecf1; border: 1px solid #bee5eb; }
+.alert-warning { color: #856404; background-color: #fff3cd; border: 1px solid #ffeeba; }
+
+/* ===========================
+   Botones
+=========================== */
+.btn-action {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+    text-align: center;
+    background-color: #28a745;
+    color: white;
+    font-size: 14px;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+.btn-action:hover { transform: scale(1.05); }
+.btn-edit { background-color: #007bff; }
+.btn-disabled {
+    background-color: #ccc;
+    color: #666;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* ===========================
+   Tabla de órdenes
+=========================== */
+.tabla-ordenes {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-top: 20px;
+}
+.tabla-ordenes th, 
+.tabla-ordenes td {
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+.tabla-ordenes thead tr {
+    background-color: #ffcc00;
+    color: #000;
+}
+
+/* ===========================
+   Estados
+=========================== */
+.estado { font-weight: bold; }
+.estado-pendiente { color: #d00000; }
+.estado-proceso { color: #ff6600; }
+.estado-completada { color: #009900; }
+
+/* ===========================
+   Texto vacío
+=========================== */
+.texto-vacio {
+    text-align: center;
+    color: gray;
+    margin-top: 20px;
+}
+</style>
+<a href="{% url 'lista_ordenes_subestacion' %}" class="btn btn-primary fw-bold  gap-1">
+       Vista 
+    </a>
+<div class="container-ordenes">
+
+    <h2 class="titulo-principal">Órdenes del Operario</h2>
+
+    <!-- MENSAJES -->
+    {% if messages %}
+        <div id="mensajes-django">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- TABLA -->
+    {% if ordenes %}
+        <table class="tabla-ordenes">
+            <thead>
+                <tr>
+                    <th>N° Orden</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th>Subestación</th>
+                    <th style="text-align:center;">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orden in ordenes %}
+                <tr>
+                    <td>{{ orden.numero }}</td>
+                    <td>{{ orden.descripcion }}</td>
+                    <td>
+                        {% if orden.estado == "pendiente" %}
+                            <span class="estado estado-pendiente">Pendiente</span>
+                        {% elif orden.estado == "en_proceso" %}
+                            <span class="estado estado-proceso">En proceso</span>
+                        {% else %}
+                            <span class="estado estado-completada">Completada</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ orden.fecha|date:"d/m/Y" }}</td>
+                    <td>{{ orden.subestacion }}</td>
+                    <td style="text-align:center;">
+                        {% if orden.tiene_revision %}
+                            <a href="{% url 'seleccionar_reporte' orden.id %}" class="btn-action btn-edit">
+                                ✏ Editar Informe
+                            </a>
+                        {% else %}
+                            <a href="{% url 'seleccionar_reporte' orden.id %}" class="btn-action">
+                                ✅ Completar Informe
+                            </a>
+                        {% endif %}
+                        
+
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="texto-vacio">No hay órdenes registradas.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

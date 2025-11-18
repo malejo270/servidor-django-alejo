@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="crear-com-container">
+
+    <!-- Botón de volver -->
+    <div class="btn-volver-container">
+        <a href="{% url 'vista_general_recos' %}" class="btn-volver">← Volver</a>
+    </div>
+
+    <!-- Mensajes -->
+    {% if messages %}
+        <div class="mensajes-container">
+            {% for message in messages %}
+                {% if 'success' in message.tags %}
+                    <div class="mensaje success">{{ message }}</div>
+                {% elif 'error' in message.tags %}
+                    <div class="mensaje error">{{ message }}</div>
+                {% else %}
+                    <div class="mensaje warning">{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Formulario -->
+    <div class="form-card">
+        <h2>Crear Comunicación</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Reconectador (Nodo):</label>
+                <select name="id_reco" required>
+                    {% for reco in reconectadores %}
+                        <option value="{{ reco.id_reco }}">
+                            Reco {{ reco.serial_reco }} – Nodo {{ reco.id_nodo.nodo }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Modem:</label>
+                <input type="text" name="modem" required>
+            </div>
+
+            <div class="form-group">
+                <label>IP:</label>
+                <input type="text" name="ip" required>
+            </div>
+
+            <div class="form-group">
+                <label>IP vieja:</label>
+                <input type="text" name="ip_vieja">
+            </div>
+
+            <div class="form-group">
+                <label>ASDU:</label>
+                <input type="text" name="asdu">
+            </div>
+
+            <div class="form-group">
+                <label>Estado:</label>
+                <input type="text" name="estado">
+            </div>
+
+            <div class="form-group">
+                <label>Tecnología:</label>
+                <input type="text" name="tecnologia">
+            </div>
+
+            <div class="form-group">
+                <label>Estado actividad:</label>
+                <input type="text" name="estado_actividad">
+            </div>
+
+            <div class="form-group">
+                <label>Serial Modem:</label>
+                <input type="text" name="serial_modem">
+            </div>
+
+            <button type="submit" class="btn-guardar">
+                Guardar Comunicación
+            </button>
+        </form>
+    </div>
+</div>
+
+<link rel="stylesheet" href="{% static 'css/crear_comunicacion.css' %}">
+{% endblock %}

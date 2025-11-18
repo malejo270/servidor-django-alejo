@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  /* ✅ Estilos globales */
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important; /* Bloquea el movimiento lateral */
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* 🔹 Botón volver */
+  .btn-volver {
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: inline-block;
+    transition: 0.3s ease;
+    font-weight: 500;
+  }
+
+  .btn-volver:hover {
+    background-color: #5a6268;
+  }
+
+  /* 🔹 Contenedor principal */
+  .container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 10px 15px;
+  }
+
+  /* 🔹 Tarjetas principales */
+  .nodo-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    width: 100%;
+  }
+
+  .reco-card {
+    background: #f8f9fa;
+    border-left: 5px solid #0d6efd;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+  }
+
+  .com-card {
+    background: #fff3cd;
+    border-left: 5px solid #ffc107;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+  }
+
+  .mensaje-vacio {
+    color: #6c757d;
+    font-style: italic;
+  }
+
+  .titulo {
+    text-align: center;
+    margin: 30px 0 20px;
+    color: #0d6efd;
+    font-weight: 600;
+    font-size: 1.8rem;
+  }
+
+  /* 🔹 Evitar márgenes laterales en móviles */
+  @media (max-width: 768px) {
+    .container {
+      padding: 0;           /* ❌ elimina los márgenes laterales */
+      max-width: 100%;
+    }
+
+    .nodo-card {
+      border-radius: 0;     /* Opcional: quita el borde redondeado para ocupar todo */
+      padding: 15px;
+      box-shadow: none;
+      border-left: none;
+      border-right: none;
+    }
+
+    .titulo {
+      font-size: 1.4rem;
+      margin-top: 20px;
+    }
+
+    .btn-volver {
+      padding: 6px 12px;
+      font-size: 0.9rem;
+    }
+  }
+</style>
+
+<div class="container py-4">
+
+  <!-- 🔹 BOTÓN DE VOLVER -->
+  <div class="d-flex justify-content-start mb-3">
+    <a href="{% url 'lista_ordenes' %}" class="btn-volver">← Volver</a>
+  </div>
+
+  <!-- 🔹 TÍTULO -->
+  <h2 class="titulo">Asociados al nodo</h2>
+
+  <!-- 🔹 LISTADO DE NODOS -->
+  <div class="row">
+    {% for nodo in nodos %}
+      <div class="col-12 col-md-10 mx-auto">
+        <div class="nodo-card">
+          <h4 class="mb-3">🧭 Nodo: {{ nodo.nodo }}</h4>
+          <p><strong>Dirección:</strong> {{ nodo.direccion }}</p>
+          <p><strong>Subestación:</strong> {{ nodo.id_subestacion.nombre }}</p>
+
+          <!-- 🔹 RECONTECTADORES -->
+          {% for reco in nodo.reconectador_set.all %}
+            <div class="reco-card">
+              <h5>🔌 Reconectador: {{ reco.serial_reco }}</h5>
+              <p><strong>Modelo:</strong> {{ reco.modelo }}</p>
+              <p><strong>Responsable:</strong> {{ reco.responsable }}</p>
+
+              <!-- 🔹 COMUNICACIONES -->
+              {% for com in reco.comunicacion_set.all %}
+                <div class="com-card">
+                  <h6>📡 Comunicación ID: {{ com.id_comunicacion }}</h6>
+                  <p><strong>Modem:</strong> {{ com.modem }}</p>
+                  <p><strong>IP:</strong> {{ com.ip }}</p>
+                  <p><strong>ASDU:</strong> {{ com.asdu }}</p>
+                  <p><strong>Tecnología:</strong> {{ com.tecnologia }}</p>
+                  <p><strong>Estado:</strong> {{ com.estado }}</p>
+                </div>
+              {% empty %}
+                <p class="mensaje-vacio">⚠️ Sin comunicación asociada.</p>
+              {% endfor %}
+            </div>
+          {% empty %}
+            <p class="mensaje-vacio">⚠️ Sin reconectadores asociados.</p>
+          {% endfor %}
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-center text-muted">No hay nodos registrados.</p>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Nodos - Cali</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        
+        .sidebar {
+            width: 300px;
+            background-color: #f8f9fa;
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid #dee2e6;
+        }
+        
+        #map {
+            flex: 1;
+            height: 100%;
+        }
+        
+        .nodo-item {
+            background: white;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3498db;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nodo-item:hover {
+            background-color: #e8f4fd;
+        }
+        
+        .nodo-nombre {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .nodo-direccion {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        
+        .nodo-info {
+            font-size: 0.8em;
+            color: #95a5a6;
+        }
+        
+        .stats {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .search-box {
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .legend {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Mapa de Nodos - Cali</h1>
+    </div>
+    
+    <div class="container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="stats">
+                <h3>Total de Nodos con cordenadas: {{ total_nodos }}</h3>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Buscar nodo...">
+            </div>
+            
+            <div id="nodos-list">
+                <!-- Los nodos se cargarán aquí dinámicamente -->
+            </div>
+            
+            
+        </div>
+        
+        <!-- Mapa -->
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        // Datos de los nodos desde Django
+        const nodos = {{ nodos|safe }};
+        const centroCali = {{ centro_cali|safe }};
+        
+        // Inicializar mapa
+        const map = L.map('map').setView(centroCali, 12);
+        
+        // Capas base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Grupo de marcadores
+        const markers = L.layerGroup().addTo(map);
+        
+        // Función para obtener color según clasificación
+        function getColorByClasificacion(clasificacion) {
+            const clasificacionLower = clasificacion.toLowerCase();
+            if (clasificacionLower.includes('principal')) return '#e74c3c';
+            if (clasificacionLower.includes('secundario')) return '#3498db';
+            if (clasificacionLower.includes('terciario')) return '#2ecc71';
+            return '#f39c12';
+        }
+        
+        // Función para crear icono personalizado
+        function createCustomIcon(color) {
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+        }
+        
+        // Crear marcadores y lista
+        const nodosList = document.getElementById('nodos-list');
+        let markerList = [];
+        
+        nodos.forEach((nodo, index) => {
+            const color = getColorByClasificacion(nodo.clasificacion);
+            const icon = createCustomIcon(color);
+            
+            // Crear marcador
+            const marker = L.marker([nodo.latitud, nodo.longitud], { icon: icon })
+                .bindPopup(`
+                    <div style="min-width: 250px;">
+                        <h3>Nodo: ${nodo.nombre}</h3>
+                        <p><strong>Dirección:</strong> ${nodo.direccion}</p>
+                        <p><strong>Circuito 1:</strong> ${nodo.circuito1}</p>
+                        <p><strong>Circuito 2:</strong> ${nodo.circuito2}</p>
+                        <p><strong>Clasificación:</strong> ${nodo.clasificacion}</p>
+                        <p><strong>NT:</strong> ${nodo.nt}</p>
+                        <p><strong>Subestación:</strong> ${nodo.subestacion}</p>
+                    </div>
+                `);
+            
+            markers.addLayer(marker);
+            
+            // Crear elemento de lista
+            const listItem = document.createElement('div');
+            listItem.className = 'nodo-item';
+            listItem.innerHTML = `
+                <div class="nodo-nombre">${nodo.nombre}</div>
+                <div class="nodo-direccion">${nodo.direccion}</div>
+                <div class="nodo-info">
+                    Circuito 1: ${nodo.circuito1} | Clasificación: ${nodo.clasificacion}
+                </div>
+            `;
+            
+            // Eventos para interactividad
+            listItem.addEventListener('click', function() {
+                marker.openPopup();
+                map.setView([nodo.latitud, nodo.longitud], 15);
+            });
+            
+            marker.on('click', function() {
+                // Resaltar elemento en la lista
+                document.querySelectorAll('.nodo-item').forEach(item => {
+                    item.style.background = 'white';
+                });
+                listItem.style.background = '#e8f4fd';
+            });
+            
+            nodosList.appendChild(listItem);
+            markerList.push({ marker: marker, nodo: nodo, element: listItem });
+        });
+        
+        // Función de búsqueda
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            
+            markerList.forEach(item => {
+                const matches = item.nodo.nombre.toLowerCase().includes(searchTerm) ||
+                              item.nodo.direccion.toLowerCase().includes(searchTerm) ||
+                              item.nodo.circuito1.toLowerCase().includes(searchTerm);
+                
+                if (matches) {
+                    item.element.style.display = 'block';
+                    item.marker.addTo(map);
+                } else {
+                    item.element.style.display = 'none';
+                    map.removeLayer(item.marker);
+                }
+            });
+        });
+        
+        // Ajustar tamaño del mapa cuando cambie el tamaño de la ventana
+        window.addEventListener('resize', function() {
+            map.invalidateSize();
+        });
+    </script>
+</body>
+</html>

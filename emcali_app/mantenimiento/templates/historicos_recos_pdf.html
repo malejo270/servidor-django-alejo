@@ -1,0 +1,103 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Históricos Reconectador {{ reco.n_equipo }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #000;
+            margin: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #d00000;
+            margin: 0;
+            padding: 0;
+        }
+        h3 {
+            color: #d00000;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+        .info-general {
+            margin-bottom: 20px;
+        }
+        .info-general p {
+            margin: 3px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        td {
+            vertical-align: top;
+            padding: 0 10px; /* espacio entre columnas */
+        }
+        .informes-column p, .comentarios-column p {
+            margin: 4px 0;
+        }
+        .comentarios-column strong {
+            color: #d00000;
+        }
+        hr {
+            border: 1px dashed #ccc;
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Históricos del Reconectador</h1>
+    <h2>{{ reco.n_equipo }}</h2>
+
+    <div class="info-general">
+        <p><strong>Nodo:</strong> {{ nodo.nodo }}</p>
+        <p><strong>Subestación:</strong> {{ nodo.id_subestacion.nombre }}</p>
+        <p><strong>Dirección:</strong> {{ nodo.direccion }}</p>
+        <p><strong>Estado Reconectador:</strong> {{ reco.estado_reconectador }}</p>
+    </div>
+
+    <table>
+        <tr>
+            <!-- Columna de informes a la izquierda -->
+            <td class="informes-column" width="60%">
+                <h3>INFORMES</h3>
+                {% for informe in informes %}
+                    <p><strong>Fecha Informe:</strong> {{ informe.inicio_actividad|date:"d/m/Y" }}</p>
+                    <p><strong>Hora Cierre:</strong> {{ informe.hora_cierre|time:"H:i" }}</p>
+                    <p><strong>Falla Identificada:</strong> {{ informe.falla_identificada|default:"—" }}</p>
+                    <p><strong>Causa Falla:</strong> {{ informe.causa_falla|default:"—" }}</p>
+                    <p><strong>Trabajo Realizado:</strong> {{ informe.trabajo_realizado|default:"—" }}</p>
+                    <p><strong>Usuario / Responsable:</strong>
+                        {% if informe.orden.creada_por %}
+                            {{ informe.orden.creada_por.nombre_completo }}
+                        {% elif informe.orden.asignada_a %}
+                            {{ informe.orden.asignada_a.nombre_completo }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </p>
+                    <hr>
+                {% empty %}
+                    <p>No hay informes registrados.</p>
+                {% endfor %}
+            </td>
+
+            <!-- Columna de comentarios a la derecha -->
+            <td class="comentarios-column" width="35%">
+                <h3>COMENTARIOS INGENIERO</h3>
+                {% for comentario in comentarios %}
+                    <p><strong>{{ comentario.creado|date:"d/m/Y H:i" }}:</strong> {{ comentario.texto }}</p>
+                {% empty %}
+                    <p>No hay comentarios registrados.</p>
+                {% endfor %}
+            </td>
+        </tr>
+    </table>
+
+</body>
+</html>

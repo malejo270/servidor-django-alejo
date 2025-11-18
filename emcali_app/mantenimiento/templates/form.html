@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 700px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+    <h2 style="text-align: center; margin-bottom: 20px; color: #2c3e50;">
+        🏭 Formulario de Subestación
+    </h2>
+
+    <div style="background: #fff; padding: 25px; border-radius: 12px; 
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Campos principales -->
+            <div style="margin-bottom: 15px;">
+                {{ form.nombre.label_tag }}<br>
+                {{ form.nombre }}
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                {{ form.ubicacion.label_tag }}<br>
+                {{ form.ubicacion }}
+            </div>
+
+            <!-- Componentes existentes -->
+            <h3 style="margin-top: 25px; color: #34495e;">⚙️ Componentes existentes</h3>
+            <ul style="list-style: none; padding: 0;">
+                {% for c in componentes_existentes %}
+                    <li style="margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                        <input type="hidden" name="ids_existentes[]" value="{{ c.id_componente_sube }}">
+
+                        <input type="text" name="componentes_existentes[]" 
+                               value="{{ c.nombre_componente }}" 
+                               style="flex: 2; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+
+                        <select name="tipos_existentes[]" style="flex:1; padding:5px; border:1px solid #ccc; border-radius:5px;">
+                            <option value="Bahia/Transformador" {% if c.tipo == "Bahia/Transformador" %}selected{% endif %}>Bahia/Transformador</option>
+                            <option value="transformador" {% if c.tipo == "transformador" %}selected{% endif %}>Transformador</option>
+                            <option value="servicios" {% if c.tipo == "servicios" %}selected{% endif %}>Servicios Auxiliares</option>
+                        </select>
+
+                        <label style="color: #e74c3c; font-size: 14px;">
+                            <input type="checkbox" name="eliminar_componentes" value="{{ c.id_componente_sube }}">
+                            Eliminar
+                        </label>
+                    </li>
+                {% empty %}
+                    <li style="color: #7f8c8d;">No hay componentes todavía</li>
+                {% endfor %}
+            </ul>
+
+            <!-- Nuevos componentes -->
+            <h3 style="margin-top: 25px; color: #34495e;">➕ Agregar nuevos componentes</h3>
+            <div id="componentes-container">
+                <div style="display:flex; gap:10px; margin-bottom:8px;">
+                    <input type="text" name="componentes[]" placeholder="Nombre componente"
+                           style="flex:2; padding: 5px; border: 1px solid #ccc; border-radius: 5px;">
+                    <select name="tipos[]" style="flex:1; padding:5px; border:1px solid #ccc; border-radius:5px;">
+                        <option value="Bahia/Transformador">Bahia/Transformador</option>
+                        <option value="transformador">Transformador</option>
+                        <option value="servicios">Servicios Auxiliares</option>
+                       
+                    </select>
+                </div>
+            </div>
+            <button type="button" onclick="agregarComponente()" 
+                    style="background: #3498db; color: white; border: none; padding: 6px 12px; 
+                           border-radius: 6px; cursor: pointer; font-size: 14px;">
+                ➕ Agregar otro
+            </button>
+
+            <!-- Botones finales -->
+            <div style="text-align: center; margin-top: 30px;">
+                <button type="submit" 
+                        style="background: #2ecc71; color: white; padding: 10px 20px;
+                               border: none; border-radius: 8px; cursor: pointer; 
+                               font-size: 15px;">
+                    💾 Guardar
+                </button>
+                
+                <a href="{% url 'subestaciones' %}" 
+                   style="background: #e74c3c; color: white; padding: 10px 20px;
+                          border-radius: 8px; text-decoration: none; font-size: 15px;
+                          margin-left: 10px;">
+                    ❌ Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function agregarComponente() {
+    let div = document.createElement("div");
+    div.style.display = "flex";
+    div.style.gap = "10px";
+    div.style.marginBottom = "8px";
+    div.innerHTML = `
+        <input type="text" name="componentes[]" placeholder="Nombre componente" 
+               style="flex:2; padding:5px; border:1px solid #ccc; border-radius:5px;">
+        <select name="tipos[]" style="flex:1; padding:5px; border:1px solid #ccc; border-radius:5px;">
+            <option value="circuito">Circuito</option>
+            <option value="transformador">Transformador</option>
+            <option value="servicios">Servicios Auxiliares</option>
+        </select>
+    `;
+    document.getElementById("componentes-container").appendChild(div);
+}
+</script>
+{% endblock %}
