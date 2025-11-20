@@ -5,6 +5,8 @@ from django.contrib import messages
 from .forms import LoginForm
 from .forms import UsuarioRegistroForm
 from .models import Trabajador
+from .decorators import role_required
+
 def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request, data=request.POST)

@@ -4,15 +4,16 @@
 {% block content %}
 <div class="historico-container">
 
-    <!-- BOTONES SUPERIORES -->
-    <div class="top-buttons">
-        <!-- Volver -->
-        <a href="{% url 'vista_general_recos_ope' %}" class="btn-volver">
+    <!-- BOTONES SUPERIORES ADAPTADOS -->
+    <div class="top-buttons d-flex flex-column flex-md-row justify-content-between align-items-start gap-2">
+
+        <!-- Volver (siempre arriba izquierda) -->
+        <a href="{% url 'vista_general_recos_ope' %}" class="btn-volver text-center text-md-start">
             ← Volver
         </a>
 
-        <!-- Reporte de Emergencia -->
-        <a href="{% url 'reporte_emergencia' %}" class="btn-emergencia">
+        <!-- Reporte de Emergencia (se mueve debajo en móvil) -->
+        <a href="{% url 'reporte_emergencia' %}" class="btn-emergencia text-center text-md-end">
             🚨 Reporte de Emergencia
         </a>
     </div>
@@ -31,6 +32,7 @@
     <!-- LISTADO DE INFORMES -->
     <div class="informes-container">
         <h3>Informes de trabajo</h3>
+
         {% if informes %}
             {% for item in informes %}
                 <div class="informe-card">
