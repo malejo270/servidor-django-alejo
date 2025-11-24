@@ -16,8 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from mantenimiento.views import login_view,ini,logout_view,mantenimiento,crear_nodo,crear_comunicacion,crear_reco,crear_subestacion,crear_orden,lista_ordenes,crear_informe_reco,conexion_cascada_view,ordenes_creadas_ingeniero,ver_informe_reco,detalle_nodo_reco_comunicacion,vista_general_recos,reporte_emergencia,historicos_recos,historico_trabajos,editar_nodo_reco_comunicacion,eliminar_comunicacion,vista_general_recos_ope,dashboard_completo,elegir_inge,subestaciones,editar_subestacion,crear_informe_subestacion,ver_informe_sub_comu,subestaciones_comunicacion,historico_sub_comu,mapa_nodos,historicos_recos_pdf,revisar_subestacion,lista_preguntas,crear_pregunta,eliminar_pregunta,subestaciones_operario,seleccionar_reporte,resumen_revision,crear_orden_subestacion,lista_ordenes_subestacion,lista_ordenes_operario,enviar_informe_final,filtrar_padres,crear_pregunta_padre,eliminar_pregunta_padre,historico_subestacion,pruebapotly,mapa_ordenes,grafico_fallas,historial_nodo,registrar_usuario
+from django.shortcuts import redirect
+from mantenimiento.views import login_view,ini,logout_view,mantenimiento,crear_nodo,crear_comunicacion,crear_reco,crear_subestacion,crear_orden,lista_ordenes,crear_informe_reco,conexion_cascada_view,ordenes_creadas_ingeniero,ver_informe_reco,detalle_nodo_reco_comunicacion,vista_general_recos,reporte_emergencia,historicos_recos,historico_trabajos,editar_nodo_reco_comunicacion,eliminar_comunicacion,vista_general_recos_ope,dashboard_completo,elegir_inge,subestaciones,editar_subestacion,crear_informe_subestacion,ver_informe_sub_comu,subestaciones_comunicacion,historico_sub_comu,mapa_nodos,historicos_recos_pdf,revisar_subestacion,lista_preguntas,crear_pregunta,eliminar_pregunta,subestaciones_operario,seleccionar_reporte,resumen_revision,crear_orden_subestacion,lista_ordenes_subestacion,lista_ordenes_operario,enviar_informe_final,filtrar_padres,crear_pregunta_padre,eliminar_pregunta_padre,historico_subestacion,pruebapotly,mapa_ordenes,grafico_fallas,historial_nodo,registrar_usuario,ver_ruta_nodo
 urlpatterns = [
+    path('', lambda request: redirect('login', permanent=False)),
     path('admin/', admin.site.urls),
     path('mantenimiento/', mantenimiento, name='mantenimiento'),
     path('login/', login_view, name='login'),
@@ -74,4 +76,5 @@ urlpatterns = [
     path('mapa_ordenes/', mapa_ordenes, name='mapa_ordenes'),
     path('grafico-fallas/', grafico_fallas, name='grafico_fallas'),
     path('historial-nodo/', historial_nodo, name='historial_nodo'),
+    path('ver-ruta-nodo/', ver_ruta_nodo, name='ver_ruta_nodo'),
 ]

@@ -7,6 +7,10 @@ from .forms import UsuarioRegistroForm
 from .models import Trabajador
 from .decorators import role_required
 
+
+def volver_loguien(request)
+    return(render, login_required)
+
 def login_view(request):
     if request.method == 'POST':
         form = LoginForm(request, data=request.POST)
@@ -101,7 +105,7 @@ from .models import (
     Rol
 )
 
-
+@role_required('jefe')
 def mantenimiento(request):
     # ✅ Se corrige .get8 por .get
     fecha_inicio = request.GET.get('fecha_inicio')
@@ -150,6 +154,7 @@ def mantenimiento(request):
 
 
 # Vista para crear un nuevo nodo
+@role_required('jefe')
 def crear_nodo(request):
    
 
@@ -189,6 +194,7 @@ def crear_nodo(request):
 # ----------------------------------------
 # ✅ VIEW 2: Crear Reconectador
 # ----------------------------------------
+@role_required('jefe')
 def crear_reco(request):
     if request.method == 'POST':
         activo = request.POST.get('activo') == 'on'
@@ -237,6 +243,7 @@ def crear_reco(request):
 # ----------------------------------------
 # ✅ VIEW 3: Crear Comunicación
 # ----------------------------------------
+@role_required('jefe')
 def crear_comunicacion(request):
     if request.method == 'POST':
         modem = request.POST.get('modem')
@@ -274,7 +281,7 @@ def crear_comunicacion(request):
 
 
 
-
+@role_required('jefe')
 def crear_orden(request):
     if request.method == 'POST':
         n_orden = request.POST.get('n_orden')
@@ -340,7 +347,7 @@ def crear_orden(request):
 
 
 
-
+@role_required('jefe')
 def lista_ordenes(request):
     # --- Ordenamiento por subestación ---
     orden_param = request.GET.get('orden', 'az')
@@ -458,7 +465,7 @@ from datetime import timedelta
 from .models import Orden, Reconectador, InformeReco, FotoInformeReco
 from .forms import InformeRecoForm, TresFotosForm
 
-
+@role_required('operario')
 def crear_informe_reco(request, orden_id):
     orden = get_object_or_404(Orden, id=orden_id)
     nodo = orden.id_nodo
@@ -663,7 +670,7 @@ def detalle_nodo_reco_comunicacion(request, nodo_id):
         'url_origen': url_origen  # <-- se pasa al template para el botón "Volver"
     })
 
-
+@role_required('jefe')
 def reporte_emergencia(request):
     nodos = Nodo.objects.all()
     subestaciones = Subestacion.objects.all()
@@ -2238,3 +2245,14 @@ def user_role_context(request):
         user_role = None
 
     return {'user_role': user_role}    
+
+def ver_ruta_nodo(request):
+    nodo_buscar = request.GET.get("nodo", None)
+    nodo_obj = None
+
+    if nodo_buscar:
+        nodo_obj = get_object_or_404(Nodo, nodo=nodo_buscar)
+
+    return render(request, "ver_ruta_nodo.html", {
+        "nodo": nodo_obj,
+    })
