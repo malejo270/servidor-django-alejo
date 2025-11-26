@@ -322,3 +322,11 @@ class HistoricoSubestacion(models.Model):
 
     def __str__(self):
         return f"Histórico {self.id} - {self.subestacion.nombre} ({self.fecha.strftime('%d/%m/%Y')})"
+
+class CodigoRecuperacion(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    codigo = models.CharField(max_length=6)
+    creado = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.codigo}"

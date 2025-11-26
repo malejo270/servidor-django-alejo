@@ -4,11 +4,12 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from .forms import LoginForm
 from .forms import UsuarioRegistroForm
-from .models import Trabajador
+from .models import Trabajador,CodigoRecuperacion
 from .decorators import role_required
-
-
-def volver_loguien(request)
+from django.core.mail import send_mail
+from django.contrib import messages
+import random
+def volver_loguien(request):
     return(render, login_required)
 
 def login_view(request):
@@ -347,7 +348,7 @@ def crear_orden(request):
 
 
 
-@role_required('jefe')
+@role_required('operario')
 def lista_ordenes(request):
     # --- Ordenamiento por subestación ---
     orden_param = request.GET.get('orden', 'az')
@@ -2216,8 +2217,12 @@ def registrar_usuario(request):
             cc = form.cleaned_data["cc"]
             rol = form.cleaned_data["rol"]
 
-            # Crear usuario del sistema
-            user = User.objects.create_user(username=username, password=password)
+            # Crear usuario del sistema - GUARDANDO EL EMAIL TAMBIÉN
+            user = User.objects.create_user(
+                username=username, 
+                password=password,
+                email=username  # ← ESTA LÍNEA ES LA CLAVE
+            )
 
             # Crear trabajador vinculado
             Trabajador.objects.create(
@@ -2256,3 +2261,421 @@ def ver_ruta_nodo(request):
     return render(request, "ver_ruta_nodo.html", {
         "nodo": nodo_obj,
     })
+
+def dashboard_estadisticas_completo(request):
+    # ================================
+    # 0️⃣ PALETA DE COLORES EMCALI
+    # ================================
+    COLORES_EMCALI = {
+        'verde_principal': '#00A859',
+        'verde_secundario': '#00C46C',
+        'verde_claro': '#E6F7EF',
+        'azul_principal': '#0057B8',
+        'azul_secundario': '#0072E3',
+        'azul_claro': '#E6F0FF',
+        'amarillo': '#FFD100',
+        'rojo': '#E30613',
+        'gris_oscuro': '#333333',
+        'gris_medio': '#666666',
+        'gris_claro': '#F5F5F5'
+    }
+    
+    # ================================
+    # 1️⃣ DATOS GENERALES (de pruebapotly)
+    # ================================
+    
+    # Totales generales
+    total_nodos = Reconectador.objects.values('id_nodo').distinct().count()
+    total_subestaciones = Reconectador.objects.values('id_nodo__id_subestacion').distinct().count()
+    total_recos = Reconectador.objects.count()
+    total_comunicaciones = Comunicacion.objects.count()
+
+    # Datos para gráficos de pruebapotly
+    recos_por_subestacion = (
+        Reconectador.objects
+        .values('id_nodo__id_subestacion__nombre')
+        .annotate(total=Count('id_reco'))
+        .order_by('id_nodo__id_subestacion__nombre')
+    )
+    subestaciones = [r['id_nodo__id_subestacion__nombre'] for r in recos_por_subestacion]
+    recos_subestacion = [r['total'] for r in recos_por_subestacion]
+
+    comunicaciones_por_estado = (
+        Comunicacion.objects
+        .values('estado')
+        .annotate(total=Count('id_comunicacion'))
+        .order_by('estado')
+    )
+    estados = [r['estado'] if r['estado'] else 'Sin estado' for r in comunicaciones_por_estado]
+    total_por_estado = [r['total'] for r in comunicaciones_por_estado]
+
+    actividad_comunicaciones = (
+        Comunicacion.objects
+        .values('estado_actividad')
+        .annotate(total=Count('id_comunicacion'))
+        .order_by('estado_actividad')
+    )
+    actividad_labels = [
+        r['estado_actividad'] if r['estado_actividad'] not in [None, '', 'nan'] else 'Sin dato'
+        for r in actividad_comunicaciones
+    ]
+    actividad_totales = [r['total'] for r in actividad_comunicaciones]
+
+    modems_por_tecnologia = (
+        Comunicacion.objects
+        .values('tecnologia')
+        .annotate(total=Count('id_comunicacion'))
+        .order_by('tecnologia')
+    )
+    tecnologias = [m['tecnologia'] if m['tecnologia'] else 'Sin dato' for m in modems_por_tecnologia]
+    total_tecnologias = [m['total'] for m in modems_por_tecnologia]
+
+    pendiente_operacion = (
+        Comunicacion.objects
+        .filter(estado__iexact="pendiente operacion")
+        .values('estado_actividad')
+        .annotate(total=Count('id_comunicacion'))
+        .order_by('estado_actividad')
+    )
+    pendiente_labels = [
+        p['estado_actividad'] if p['estado_actividad'] not in [None, '', 'nan'] else 'Sin dato'
+        for p in pendiente_operacion
+    ]
+    pendiente_totales = [p['total'] for p in pendiente_operacion]
+
+    ri_obsoleto = (
+        Comunicacion.objects
+        .filter(estado__iexact="RI OBSOLETO")
+        .values('estado_actividad')
+        .annotate(total=Count('id_comunicacion'))
+        .order_by('estado_actividad')
+    )
+    ri_obsoleto_labels = [
+        r['estado_actividad'] if r['estado_actividad'] not in [None, '', 'nan'] else 'Sin dato'
+        for r in ri_obsoleto
+    ]
+    ri_obsoleto_totales = [r['total'] for r in ri_obsoleto]
+
+    # ================================
+    # 2️⃣ DATOS ESPECÍFICOS EMCALI (de grafico_comunicaciones)
+    # ================================
+    
+    ESTADOS_VALIDOS = [
+        "OPERATIVO",
+        "Pendiente Mantenimiento",
+        "Pendiente Operacion",
+        "Pendiente Telco",
+        "NA",
+    ]
+
+    # Filtrar comunicaciones por responsable EMCALI
+    comunicaciones_emcali = Comunicacion.objects.filter(
+        id_reco__responsable__iexact="emcali",
+        estado__in=ESTADOS_VALIDOS
+    )
+
+    conteo_total_emcali = comunicaciones_emcali.count()
+
+    # Histograma EMCALI
+    data_emcali = [{"estado": c.estado} for c in comunicaciones_emcali]
+    
+    if not data_emcali:
+        chart_emcali_html = "<h4>No hay datos EMCALI para mostrar.</h4>"
+    else:
+        fig_emcali = px.histogram(
+            data_emcali,
+            x="estado",
+            color="estado",
+            title="Estados de Comunicación - Responsable EMCALI",
+            text_auto=True,
+            color_discrete_sequence=[
+                COLORES_EMCALI['verde_principal'],  # OPERATIVO
+                COLORES_EMCALI['amarillo'],         # Pendiente Mantenimiento
+                COLORES_EMCALI['rojo'],             # Pendiente Operacion
+                COLORES_EMCALI['azul_principal'],   # Pendiente Telco
+                COLORES_EMCALI['gris_medio']        # NA
+            ]
+        )
+        fig_emcali.update_layout(
+            autosize=True,
+            height=400,
+            margin=dict(l=20, r=20, t=50, b=20),
+            paper_bgcolor='white',
+            plot_bgcolor=COLORES_EMCALI['gris_claro'],
+            font=dict(color=COLORES_EMCALI['gris_oscuro']),
+            title_font=dict(color=COLORES_EMCALI['azul_principal'])
+        )
+        chart_emcali_html = fig_emcali.to_html(full_html=False)
+
+    # Torta EMCALI
+    ESTADOS_SIN = ["Pendiente Mantenimiento", "Pendiente Operacion", "Pendiente Telco"]
+    sin_com_emcali = comunicaciones_emcali.filter(estado__in=ESTADOS_SIN).count()
+    comunicados_emcali = conteo_total_emcali - sin_com_emcali
+
+    data_torta_emcali = {
+        "categoria": ["Comunicados", "Sin Comunicación"],
+        "cantidad": [comunicados_emcali, sin_com_emcali]
+    }
+
+    fig_torta_emcali = px.pie(
+        data_torta_emcali,
+        names="categoria",
+        values="cantidad",
+        title="Comunicación General - EMCALI",
+        color_discrete_sequence=[COLORES_EMCALI['verde_principal'], COLORES_EMCALI['rojo']]
+    )
+    fig_torta_emcali.update_traces(textinfo="label+value+percent")
+    fig_torta_emcali.update_layout(
+        autosize=True,
+        height=400,
+        margin=dict(l=20, r=20, t=50, b=20),
+        paper_bgcolor='white',
+        font=dict(color=COLORES_EMCALI['gris_oscuro']),
+        title_font=dict(color=COLORES_EMCALI['azul_principal'])
+    )
+    torta_emcali_html = fig_torta_emcali.to_html(full_html=False)
+
+    # ================================
+    # 3️⃣ DATOS DE FALLAS (de grafico_fallas)
+    # ================================
+    
+    # Parámetros GET para fallas
+    rango = request.GET.get('rango', '15d')
+    falla_seleccionada = request.GET.get('falla', '')
+
+    # Determinar rango de fechas para fallas
+    fecha_fin = timezone.now().date()
+    if rango == '3m':
+        fecha_inicio = fecha_fin - timedelta(days=90)
+    elif rango == '12m':
+        fecha_inicio = fecha_fin - timedelta(days=365)
+    else:
+        fecha_inicio = fecha_fin - timedelta(days=15)
+
+    # Filtro base para fallas
+    informes = InformeReco.objects.filter(
+        inicio_actividad__date__range=(fecha_inicio, fecha_fin)
+    )
+
+    if falla_seleccionada:
+        informes = informes.filter(falla_identificada=falla_seleccionada)
+
+    informes = informes.values('falla_identificada', 'inicio_actividad')
+
+    # Crear gráfico de fallas
+    if not informes.exists():
+        grafico_fallas_html = "<p class='text-center text-muted'>No hay datos de fallas disponibles para el rango seleccionado.</p>"
+    else:
+        df = pd.DataFrame(informes)
+        df_group = df.groupby('falla_identificada').size().reset_index(name='conteo')
+
+        fig_fallas = px.bar(
+            df_group,
+            x='falla_identificada',
+            y='conteo',
+            title=f"Fallas identificadas ({fecha_inicio} → {fecha_fin})",
+            text='conteo',
+            color='falla_identificada',
+            color_discrete_sequence=[
+                COLORES_EMCALI['rojo'], COLORES_EMCALI['amarillo'], COLORES_EMCALI['azul_principal'],
+                COLORES_EMCALI['verde_principal'], COLORES_EMCALI['gris_medio'], COLORES_EMCALI['azul_secundario'],
+                COLORES_EMCALI['verde_secundario'], COLORES_EMCALI['rojo'], COLORES_EMCALI['amarillo'],
+                COLORES_EMCALI['azul_principal'], COLORES_EMCALI['gris_oscuro']
+            ]
+        )
+        fig_fallas.update_layout(
+            xaxis_title="Tipo de Falla",
+            yaxis_title="Cantidad de casos",
+            showlegend=False,
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+            title_x=0.5,
+            height=500,
+            font=dict(color=COLORES_EMCALI['gris_oscuro']),
+            title_font=dict(color=COLORES_EMCALI['azul_principal'])
+        )
+        grafico_fallas_html = plot(fig_fallas, output_type='div')
+
+    # Opciones de fallas
+    opciones_fallas = [
+        ('falta_tension_ac', 'Falta tensión AC'),
+        ('modem_apagado', 'Modem apagado'),
+        ('display_no_prende', 'Display caja de control no prende'),
+        ('breaker_abierto', 'Breaker de alimentación AC abierto'),
+        ('fuente_dc_apagada', 'Fuente externa DC apagada'),
+        ('caja_bloqueada', 'Caja de control bloqueada'),
+        ('falta_antena', 'Falta antena'),
+        ('antena_caida', 'Antena caída'),
+        ('modem_no_comunica', 'Modem no comunica'),
+        ('falla_fibra', 'Falla en fibra óptica'),
+        ('desconocida', 'Desconocida'),
+    ]
+
+    # ================================
+    # 4️⃣ FUNCIÓN PARA GRÁFICOS (de pruebapotly)
+    # ================================
+    
+    def crear_grafico(x, y, titulo):
+        df = pd.DataFrame({
+            "categoria": x,
+            "valor": y
+        })
+
+        fig = px.bar(
+            df,
+            x="categoria",
+            y="valor",
+            title=titulo,
+            text="valor",
+            color="categoria",
+            color_discrete_sequence=[
+                COLORES_EMCALI['verde_principal'], COLORES_EMCALI['azul_principal'], 
+                COLORES_EMCALI['amarillo'], COLORES_EMCALI['rojo'], COLORES_EMCALI['gris_medio'],
+                COLORES_EMCALI['verde_secundario'], COLORES_EMCALI['azul_secundario']
+            ]
+        )
+
+        fig.update_traces(texttemplate='%{text}', textposition='outside')
+        fig.update_layout(
+            height=550,
+            margin=dict(t=80, b=100, l=50, r=30),
+            xaxis_tickangle=-35,
+            paper_bgcolor='white',
+            plot_bgcolor=COLORES_EMCALI['gris_claro'],
+            font=dict(size=13, color=COLORES_EMCALI['gris_oscuro'], family='Segoe UI'),
+            title_font=dict(size=20, color=COLORES_EMCALI['azul_principal']),
+        )
+        return fig.to_html(full_html=False)
+
+    # Generar gráficos de pruebapotly
+    grafico1 = crear_grafico(subestaciones, recos_subestacion, "Recos por Subestación")
+    grafico2 = crear_grafico(estados, total_por_estado, "Estado Comunicación")
+    grafico3 = crear_grafico(actividad_labels, actividad_totales, "Actividad Comunicaciones")
+    grafico4 = crear_grafico(tecnologias, total_tecnologias, "Módems por Tecnología")
+    grafico5 = crear_grafico(pendiente_labels, pendiente_totales, "Pendiente Mantenimiento")
+    grafico6 = crear_grafico(ri_obsoleto_labels, ri_obsoleto_totales, "RI Obsoleto")
+
+    # 5️⃣ Control del botón "volver"
+    origen_param = request.GET.get("from", "mantenimiento")
+    try:
+        url_origen = reverse(origen_param)
+    except:
+        url_origen = reverse("mantenimiento")
+
+    return render(request, 'dashboard_completo.html', {
+        # Totales generales
+        'total_nodos': total_nodos,
+        'total_subestaciones': total_subestaciones,
+        'total_recos': total_recos,
+        'total_comunicaciones': total_comunicaciones,
+        
+        # Gráficos generales
+        'grafico1': grafico1,
+        'grafico2': grafico2,
+        'grafico3': grafico3,
+        'grafico4': grafico4,
+        'grafico5': grafico5,
+        'grafico6': grafico6,
+        
+        # Datos EMCALI
+        'grafico_emcali': chart_emcali_html,
+        'torta_emcali': torta_emcali_html,
+        'conteo_total_emcali': conteo_total_emcali,
+        'comunicados_emcali': comunicados_emcali,
+        'sin_com_emcali': sin_com_emcali,
+        
+        # Datos de Fallas
+        'grafico_fallas': grafico_fallas_html,
+        'rango': rango,
+        'falla_seleccionada': falla_seleccionada,
+        'opciones_fallas': opciones_fallas,
+        'fecha_inicio_fallas': fecha_inicio,
+        'fecha_fin_fallas': fecha_fin,
+        
+        # Colores EMCALI para el template
+        'colores_emcali': COLORES_EMCALI,
+        
+        # Navegación
+        'url_origen': url_origen,
+    })    
+def solicitar_codigo(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            messages.error(request, "No existe un usuario con ese correo.")
+            return redirect("solicitar_codigo")
+
+        # Generar código
+        codigo = str(random.randint(100000, 999999))
+
+        # Guardarlo
+        CodigoRecuperacion.objects.update_or_create(
+            user=user,
+            defaults={"codigo": codigo}
+        )
+
+        # Enviar correo
+        send_mail(
+            "Código de recuperación de contraseña",
+            f"Tu código es: {codigo}",
+            "tucorreo@gmail.com",
+            [email],
+            fail_silently=False,
+        )
+
+        messages.success(request, "Se envió un código a tu correo.")
+        return redirect("verificar_codigo")
+
+    return render(request, "solicitar_codigo.html")    
+
+def verificar_codigo(request):
+    if request.method == "POST":
+        email = request.POST.get("email")
+        codigo = request.POST.get("codigo")
+
+        try:
+            user = User.objects.get(email=email)
+            registro = CodigoRecuperacion.objects.get(user=user)
+        except:
+            messages.error(request, "Correo o código incorrecto.")
+            return redirect("verificar_codigo")
+
+        if registro.codigo == codigo:
+            request.session["recuperar_user_id"] = user.id
+            return redirect("cambiar_contrasena")
+
+        messages.error(request, "Código incorrecto.")
+        return redirect("verificar_codigo")
+
+    return render(request, "verificar_codigo.html")
+
+from django.contrib.auth import update_session_auth_hash
+
+def cambiar_contrasena(request):
+    user_id = request.session.get("recuperar_user_id")
+
+    if not user_id:
+        return redirect("solicitar_codigo")
+
+    user = User.objects.get(id=user_id)
+
+    if request.method == "POST":
+        nueva = request.POST.get("nueva")
+        confirmar = request.POST.get("confirmar")
+
+        if nueva != confirmar:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return redirect("cambiar_contrasena")
+
+        user.set_password(nueva)
+        user.save()
+        CodigoRecuperacion.objects.filter(user=user).delete()
+        del request.session["recuperar_user_id"]
+
+        messages.success(request, "Contraseña cambiada correctamente.")
+        return redirect("login")
+
+    return render(request, "cambiar_contrasena.html")

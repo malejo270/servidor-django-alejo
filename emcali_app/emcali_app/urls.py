@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.shortcuts import redirect
-from mantenimiento.views import login_view,ini,logout_view,mantenimiento,crear_nodo,crear_comunicacion,crear_reco,crear_subestacion,crear_orden,lista_ordenes,crear_informe_reco,conexion_cascada_view,ordenes_creadas_ingeniero,ver_informe_reco,detalle_nodo_reco_comunicacion,vista_general_recos,reporte_emergencia,historicos_recos,historico_trabajos,editar_nodo_reco_comunicacion,eliminar_comunicacion,vista_general_recos_ope,dashboard_completo,elegir_inge,subestaciones,editar_subestacion,crear_informe_subestacion,ver_informe_sub_comu,subestaciones_comunicacion,historico_sub_comu,mapa_nodos,historicos_recos_pdf,revisar_subestacion,lista_preguntas,crear_pregunta,eliminar_pregunta,subestaciones_operario,seleccionar_reporte,resumen_revision,crear_orden_subestacion,lista_ordenes_subestacion,lista_ordenes_operario,enviar_informe_final,filtrar_padres,crear_pregunta_padre,eliminar_pregunta_padre,historico_subestacion,pruebapotly,mapa_ordenes,grafico_fallas,historial_nodo,registrar_usuario,ver_ruta_nodo
+from mantenimiento.views import login_view,ini,logout_view,mantenimiento,crear_nodo,crear_comunicacion,crear_reco,crear_subestacion,crear_orden,lista_ordenes,crear_informe_reco,conexion_cascada_view,ordenes_creadas_ingeniero,ver_informe_reco,detalle_nodo_reco_comunicacion,vista_general_recos,reporte_emergencia,historicos_recos,historico_trabajos,editar_nodo_reco_comunicacion,eliminar_comunicacion,vista_general_recos_ope,elegir_inge,subestaciones,editar_subestacion,crear_informe_subestacion,ver_informe_sub_comu,subestaciones_comunicacion,historico_sub_comu,mapa_nodos,historicos_recos_pdf,revisar_subestacion,lista_preguntas,crear_pregunta,eliminar_pregunta,subestaciones_operario,seleccionar_reporte,resumen_revision,crear_orden_subestacion,lista_ordenes_subestacion,lista_ordenes_operario,enviar_informe_final,filtrar_padres,crear_pregunta_padre,eliminar_pregunta_padre,historico_subestacion,pruebapotly,mapa_ordenes,grafico_fallas,historial_nodo,registrar_usuario,ver_ruta_nodo,solicitar_codigo,verificar_codigo,cambiar_contrasena,dashboard_estadisticas_completo
 urlpatterns = [
     path('', lambda request: redirect('login', permanent=False)),
     path('admin/', admin.site.urls),
@@ -45,7 +45,7 @@ urlpatterns = [
     name='editar_nodo_reco_comunicacion' ),
     path('eliminar-comunicacion/<int:comunicacion_id>/', eliminar_comunicacion, name='eliminar_comunicacion'),
     path('historico-operario/', vista_general_recos_ope, name='vista_general_recos_ope'),
-    path('dashboard-completo/', dashboard_completo, name='dashboard_completo'),
+    path('dashboard-completo/', dashboard_estadisticas_completo, name='dashboard_completo'),
     path('elegir/', elegir_inge, name='elegir_inge'),
     path('subestaciones/', subestaciones, name='subestaciones'),
     path('subestaciones/editar/<int:id>/', editar_subestacion, name='editar_subestacion'),
@@ -77,4 +77,7 @@ urlpatterns = [
     path('grafico-fallas/', grafico_fallas, name='grafico_fallas'),
     path('historial-nodo/', historial_nodo, name='historial_nodo'),
     path('ver-ruta-nodo/', ver_ruta_nodo, name='ver_ruta_nodo'),
+    path("recuperar/", solicitar_codigo, name="solicitar_codigo"),
+    path("verificar/", verificar_codigo, name="verificar_codigo"),
+    path("cambiar/", cambiar_contrasena, name="cambiar_contrasena"),
 ]

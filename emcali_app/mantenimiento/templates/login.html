@@ -31,6 +31,18 @@
                 padding: 10px !important;
             }
         }
+
+        /* EFECTO HOVER PARA OLVIDÉ CONTRASEÑA */
+        .forgot-password-link {
+            color: #6c757d !important; /* Color gris por defecto */
+            text-decoration: none !important;
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
+
+        .forgot-password-link:hover {
+            color: #198754 !important; /* Color verde al hacer hover */
+            transform: translateY(-1px); /* Efecto sutil de elevación */
+        }
     </style>
 </head>
 
@@ -60,6 +72,13 @@
       </div>
 
       <button type="submit" class="btn btn-success w-100 py-2 fs-5 btn-login">Ingresar</button>
+
+      <!-- BOTÓN OLVIDÉ MI CONTRASEÑA -->
+      <div class="text-center mt-3">
+        <a href="{% url 'solicitar_codigo' %}" class="forgot-password-link">
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
 
       {% if messages %}
       <div class="mt-3">

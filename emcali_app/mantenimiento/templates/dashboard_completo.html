@@ -3,278 +3,301 @@
 
 {% block content %}
 
-<!-- Botón Volver dinámico -->
-<a href="{{ url_origen }}" 
-   class="btn" 
-   style="display:inline-block; margin-bottom:15px; background-color:#6c757d; color:white; padding:8px 15px; border-radius:6px; text-decoration:none; font-weight:bold;">
+<a href="{{ url_origen }}" class="btn" style="margin-bottom:20px; background:{{ colores_emcali.gris_medio }}; color:white; padding:8px 15px; border-radius:6px; text-decoration:none;">
    ← Volver
 </a>
 
-<h2 style="text-align:center; margin-bottom:10px; font-size:28px; font-weight:700; color:#2c3e50;">
-    Datos Estadísticos de la app
+<h2 style="text-align:center; margin-bottom:10px; font-size:28px; font-weight:700; color:{{ colores_emcali.azul_principal }};">
+    🏢 Dashboard EMCALI - Estadísticas de Reconectadores
 </h2>
 
-<p style="text-align:center; font-size:16px; margin-bottom:30px; color:#7f8c8d;">
-    <span style="margin:0 10px;"><strong>Total Nodos:</strong> {{ total_nodos }}</span> |
-    <span style="margin:0 10px;"><strong>Subestaciones:</strong> {{ total_subestaciones }}</span> |
-    <span style="margin:0 10px;"><strong>Recos:</strong> {{ total_recos }}</span> |
-    <span style="margin:0 10px;"><strong>Comunicaciones:</strong> {{ total_comunicaciones }}</span>
+<p style="text-align:center; font-size:16px; margin-bottom:30px; color:{{ colores_emcali.gris_medio }};">
+    <strong>Nodos:</strong> {{ total_nodos }} |
+    <strong>Subestaciones:</strong> {{ total_subestaciones }} |
+    <strong>Recos:</strong> {{ total_recos }} |
+    <strong>Comunicaciones:</strong> {{ total_comunicaciones }} |
+    <strong> Recos de EMCALI:</strong> {{ conteo_total_emcali }}
 </p>
 
 <style>
     body {
-        background: #f4f6f8;
-        font-family: 'Segoe UI', sans-serif;
+        background-color: {{ colores_emcali.gris_claro }};
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+
     .dashboard-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-        gap: 25px;
-        padding: 10px;
-        max-width: 1400px;
-        margin: 0 auto;
-    }
-    .chart-card {
-        padding: 20px;
-        background: #fff;
-        border-radius: 16px;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
         display: flex;
         flex-direction: column;
         align-items: center;
+        gap: 30px;
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
     }
+
+    .section-title {
+        width: 100%;
+        text-align: left;
+        font-size: 24px;
+        font-weight: 600;
+        color: {{ colores_emcali.azul_principal }};
+        margin: 20px 0 10px 0;
+        padding-bottom: 10px;
+        border-bottom: 3px solid {{ colores_emcali.verde_principal }};
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+        gap: 25px;
+        width: 100%;
+    }
+
+    .emcali-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+        gap: 25px;
+        width: 100%;
+    }
+
+    .fallas-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 25px;
+        width: 100%;
+    }
+
+    .chart-card {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        overflow-x: auto;
+        border-left: 4px solid {{ colores_emcali.verde_principal }};
+    }
+
     .chart-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
     }
-    .chart-title {
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 15px;
-        color: #34495e;
+
+    .chart-card > div {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .stats-emcali {
+        background: linear-gradient(135deg, {{ colores_emcali.verde_principal }} 0%, {{ colores_emcali.azul_principal }} 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stats-emcali h3 {
+        margin-top: 0;
+        text-align: center;
+        font-size: 22px;
+        margin-bottom: 20px;
+        color: white;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
         text-align: center;
     }
-    .chart-card canvas {
-        width: 100% !important;
-        height: 300px !important;
-    }
-    .chart-full-width {
-        grid-column: 1 / -1;
-    }
-    .nodes-section {
-        max-width: 1400px;
-        margin: 40px auto;
-        padding: 0 20px;
-    }
-    .card {
-        background: #fff;
-        border-radius: 12px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+
+    .stat-item {
+        background: rgba(255,255,255,0.2);
         padding: 20px;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: white;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        opacity: 0.9;
+        color: white;
+    }
+
+    .filtros-fallas {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
         margin-bottom: 20px;
-        transition: transform 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid {{ colores_emcali.azul_principal }};
     }
-    .card:hover {
-        transform: translateY(-3px);
+
+    .filtros-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 20px;
+        align-items: end;
     }
-    .card h3 {
-        font-size: 20px;
-        color: #ff4d4d;
-        margin-bottom: 10px;
+
+    .form-group {
+        margin-bottom: 0;
     }
-    table {
+
+    .form-label {
+        font-weight: 600;
+        color: {{ colores_emcali.gris_oscuro }};
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-select {
         width: 100%;
-        border-collapse: collapse;
-        margin-top: 15px;
+        padding: 12px;
+        border-radius: 6px;
+        border: 2px solid {{ colores_emcali.gris_claro }};
+        background: white;
+        color: {{ colores_emcali.gris_oscuro }};
         font-size: 14px;
     }
-    th, td {
-        padding: 10px;
-        text-align: center;
-        border-bottom: 1px solid #ddd;
+
+    .form-select:focus {
+        border-color: {{ colores_emcali.verde_principal }};
+        outline: none;
+        box-shadow: 0 0 0 3px {{ colores_emcali.verde_claro }};
     }
-    th {
-        background-color: #ff4d4d;
-        color: white;
-    }
-    tr:hover {
-        background-color: #f9f9f9;
-    }
-    .btn {
-        display: inline-block;
-        padding: 8px 15px;
+
+    .btn-filtrar {
+        width: 100%;
+        padding: 12px 20px;
         border-radius: 6px;
-        background-color: #ff4d4d;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        background: {{ colores_emcali.verde_principal }};
         color: white;
-        text-decoration: none;
-        font-size: 13px;
         transition: background 0.3s ease;
     }
-    .btn:hover {
-        background-color: #cc0000;
+
+    .btn-filtrar:hover {
+        background: {{ colores_emcali.verde_secundario }};
+        transform: translateY(-1px);
+    }
+
+    /* 🔹 Asegurar que los gráficos no se corten */
+    .js-plotly-plot,
+    .plot-container {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    @media (max-width: 768px) {
+        .charts-grid,
+        .emcali-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .filtros-form {
+            grid-template-columns: 1fr;
+        }
+        
+        .chart-card {
+            padding: 20px;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
 <div class="dashboard-container">
-    <div class="chart-card chart-full-width">
-        <div class="chart-title">Recos por Subestación</div>
-        <canvas id="recosSubestacionChart"></canvas>
+    
+    <!-- SECCIÓN EMCALI -->
+    <div class="section-title">🏢 Estadísticas EMCALI</div>
+    
+    <div class="stats-emcali">
+        <h3>📊 Resumen Comunicaciones EMCALI</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value">{{ conteo_total_emcali }}</div>
+                <div class="stat-label">Total Comunicaciones</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ comunicados_emcali }}</div>
+                <div class="stat-label">✅ Comunicados</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ sin_com_emcali }}</div>
+                <div class="stat-label">❌ Sin Comunicación</div>
+            </div>
+        </div>
     </div>
-    <div class="chart-card">
-        <div class="chart-title">Estado comunicación</div>
-        <canvas id="estadoRecosChart"></canvas>
+
+    <div class="emcali-grid">
+        <div class="chart-card">{{ grafico_emcali|safe }}</div>
+        <div class="chart-card">{{ torta_emcali|safe }}</div>
     </div>
-    <div class="chart-card">
-        <div class="chart-title">Actividad Comunicaciones</div>
-        <canvas id="actividadComunicacionesChart"></canvas>
+
+    <!-- SECCIÓN FALLAS -->
+    <div class="section-title">🚨 Análisis de Fallas</div>
+
+    <div class="filtros-fallas">
+        <form method="get" class="filtros-form">
+            <div class="form-group">
+                <label class="form-label">🔧 Tipo de Falla:</label>
+                <select name="falla" class="form-select">
+                    <option value="">-- Todas las fallas --</option>
+                    {% for valor, texto in opciones_fallas %}
+                        <option value="{{ valor }}" {% if valor == falla_seleccionada %}selected{% endif %}>{{ texto }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">📅 Rango de Tiempo:</label>
+                <select name="rango" class="form-select">
+                    <option value="15d" {% if rango == '15d' %}selected{% endif %}>Últimos 15 días</option>
+                    <option value="3m" {% if rango == '3m' %}selected{% endif %}>Últimos 3 meses</option>
+                    <option value="12m" {% if rango == '12m' %}selected{% endif %}>Último año</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn-filtrar">🔍 Filtrar</button>
+            </div>
+        </form>
     </div>
-    <div class="chart-card">
-        <div class="chart-title">Módems por Tecnología</div>
-        <canvas id="modemsTecnologiaChart"></canvas>
+
+    <div class="fallas-grid">
+        <div class="chart-card">
+            {{ grafico_fallas|safe }}
+        </div>
     </div>
-    <div class="chart-card">
-        <div class="chart-title">Pendiente Mantenimiento (Actividades)</div>
-        <canvas id="pendienteMantenimientoChart"></canvas>
+
+    <!-- SECCIÓN GENERAL -->
+    <div class="section-title">📈 Estadísticas Generales</div>
+    
+    <div class="charts-grid">
+        <div class="chart-card">{{ grafico1|safe }}</div>
+        <div class="chart-card">{{ grafico2|safe }}</div>
+        <div class="chart-card">{{ grafico3|safe }}</div>
+        <div class="chart-card">{{ grafico4|safe }}</div>
+        <div class="chart-card">{{ grafico5|safe }}</div>
+   
     </div>
-    <div class="chart-card">
-        <div class="chart-title">RI Obsoleto (Actividades)</div>
-        <canvas id="riObsoletoChart"></canvas>
-    </div>
+
 </div>
-
-<div class="nodes-section">
-    {% for nodo in nodos %}
-    <div class="card">
-        <h3>📍 Nodo: {{ nodo.nodo }}</h3>
-        <p><strong>Dirección:</strong> {{ nodo.direccion }}</p>
-        <p><strong>Subestación:</strong> {{ nodo.id_subestacion.nombre }}</p>
-
-        {% if nodo.reconectador_set.all %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Serial</th>
-                    <th>Modelo</th>
-                    <th>Responsable</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for reco in nodo.reconectador_set.all %}
-                <tr>
-                    <td>{{ reco.serial_reco }}</td>
-                    <td>{{ reco.modelo }}</td>
-                    <td>{{ reco.responsable }}</td>
-                    <td>{{ reco.estado_reconectador|default:"Sin estado" }}</td>
-                    <td>
-                        <a href="{% url 'detalle_reco' reco.id_reco %}" class="btn">Ver detalle</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p style="color: gray;">No hay reconectadores registrados en este nodo.</p>
-        {% endif %}
-    </div>
-    {% endfor %}
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-
-{{ subestaciones|json_script:"subestaciones-data" }}
-{{ recos_subestacion|json_script:"recos-subestacion-data" }}
-{{ estados|json_script:"estados-data" }}
-{{ total_por_estado|json_script:"total-por-estado-data" }}
-{{ actividad_labels|json_script:"actividad-labels-data" }}
-{{ actividad_totales|json_script:"actividad-totales-data" }}
-{{ tecnologias|json_script:"tecnologias-data" }}
-{{ total_tecnologias|json_script:"total-tecnologias-data" }}
-{{ pendiente_labels|json_script:"pendiente-labels-data" }}
-{{ pendiente_totales|json_script:"pendiente-totales-data" }}
-{{ ri_obsoleto_labels|json_script:"ri-obsoleto-labels-data" }}
-{{ ri_obsoleto_totales|json_script:"ri-obsoleto-totales-data" }}
-
-<script>
-    const subestaciones = JSON.parse(document.getElementById('subestaciones-data').textContent);
-    const recosSubestacion = JSON.parse(document.getElementById('recos-subestacion-data').textContent);
-    const estados = JSON.parse(document.getElementById('estados-data').textContent);
-    const totalPorEstado = JSON.parse(document.getElementById('total-por-estado-data').textContent);
-    const actividadLabels = JSON.parse(document.getElementById('actividad-labels-data').textContent);
-    const actividadTotales = JSON.parse(document.getElementById('actividad-totales-data').textContent);
-    const tecnologias = JSON.parse(document.getElementById('tecnologias-data').textContent);
-    const totalTecnologias = JSON.parse(document.getElementById('total-tecnologias-data').textContent);
-    const pendienteLabels = JSON.parse(document.getElementById('pendiente-labels-data').textContent);
-    const pendienteTotales = JSON.parse(document.getElementById('pendiente-totales-data').textContent);
-    const riObsoletoLabels = JSON.parse(document.getElementById('ri-obsoleto-labels-data').textContent);
-    const riObsoletoTotales = JSON.parse(document.getElementById('ri-obsoleto-totales-data').textContent);
-
-    function generarColores(cantidad) {
-        return Array.from({ length: cantidad }, (_, i) => `hsl(${(i * 360) / cantidad}, 70%, 60%)`);
-    }
-
-    const opcionesConLabels = {
-        responsive: true,
-        plugins: {
-            legend: { labels: { color: '#2c3e50', font: { size: 14 } } },
-            datalabels: {
-                color: '#000',
-                font: { weight: 'bold' },
-                anchor: 'end',
-                align: 'top',
-                formatter: value => value.toLocaleString()
-            }
-        },
-        scales: { 
-            y: { beginAtZero: true, ticks: { color: '#2c3e50' } },
-            x: { ticks: { color: '#2c3e50', autoSkip: false, maxRotation: 45, minRotation: 45 } }
-        }
-    };
-
-    new Chart(document.getElementById('recosSubestacionChart'), {
-        type: 'bar',
-        data: { labels: subestaciones, datasets: [{ label: 'Recos por Subestación', data: recosSubestacion, backgroundColor: generarColores(recosSubestacion.length), borderColor: '#34495e', borderWidth: 1 }] },
-        options: opcionesConLabels,
-        plugins: [ChartDataLabels]
-    });
-
-    new Chart(document.getElementById('estadoRecosChart'), {
-        type: 'bar',
-        data: { labels: estados, datasets: [{ label: 'Estado de Recos', data: totalPorEstado, backgroundColor: generarColores(totalPorEstado.length), borderColor: '#34495e', borderWidth: 1 }] },
-        options: opcionesConLabels,
-        plugins: [ChartDataLabels]
-    });
-
-    new Chart(document.getElementById('actividadComunicacionesChart'), {
-        type: 'bar',
-        data: { labels: actividadLabels, datasets: [{ label: 'Actividad Comunicaciones', data: actividadTotales, backgroundColor: generarColores(actividadTotales.length), borderColor: '#34495e', borderWidth: 1 }] },
-        options: opcionesConLabels,
-        plugins: [ChartDataLabels]
-    });
-
-    new Chart(document.getElementById('modemsTecnologiaChart'), {
-        type: 'bar',
-        data: { labels: tecnologias, datasets: [{ label: 'Módems por Tecnología', data: totalTecnologias, backgroundColor: generarColores(totalTecnologias.length), borderColor: '#34495e', borderWidth: 1 }] },
-        options: opcionesConLabels,
-        plugins: [ChartDataLabels]
-    });
-
-    new Chart(document.getElementById('pendienteMantenimientoChart'), {
-        type: 'bar',
-        data: { labels: pendienteLabels, datasets: [{ label: 'Actividades en Pendiente Mantenimiento', data: pendienteTotales, backgroundColor: generarColores(pendienteTotales.length), borderColor: '#34495e', borderWidth: 1 }] },
-        options: opcionesConLabels,
-        plugins: [ChartDataLabels]
-    });
-
-    new Chart(document.getElementById('riObsoletoChart'), {
-        type: 'bar',
-        data: { labels: riObsoletoLabels, datasets: [{ label: 'Actividades en RI Obsoleto', data: riObsoletoTotales, backgroundColor: generarColores(riObsoletoTotales.length), borderColor: '#34495e', borderWidth: 1 }] },
-        options: opcionesConLabels,
-        plugins: [ChartDataLabels]
-    });
-</script>
 
 {% endblock %}
