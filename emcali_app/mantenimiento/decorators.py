@@ -16,8 +16,6 @@ def role_required(*roles):
             if rol_usuario not in roles:
                 messages.error(request, "No tienes permiso para acceder a esta página.")
                 return render(request, 'login.html', status=403)
-                # O si quieres mandarlo al login:
-                # return redirect('login')
 
             return view_func(request, *args, **kwargs)
         return wrapper

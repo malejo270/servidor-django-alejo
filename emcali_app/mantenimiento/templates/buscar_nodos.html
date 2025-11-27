@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buscar Nodos</title>
+    <style>
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .search-box { margin-bottom: 20px; }
+        .nodo-card { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            border-radius: 5px; 
+        }
+        .coordenadas { color: #666; font-size: 14px; }
+        .ruta-btn { 
+            background: #4285f4; 
+            color: white; 
+            padding: 8px 15px; 
+            text-decoration: none; 
+            border-radius: 4px; 
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .ruta-btn:hover { background: #3367d6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Buscar Nodos</h1>
+        
+        <!-- Formulario de búsqueda -->
+        <div class="search-box">
+            <form method="GET">
+                <input type="text" name="q" value="{{ query }}" placeholder="Buscar por nodo, dirección, circuito..." style="padding: 10px; width: 300px;">
+                <button type="submit" style="padding: 10px 20px;">Buscar</button>
+            </form>
+        </div>
+
+        <!-- Resultados -->
+        {% if nodos %}
+            <h3>Resultados para "{{ query }}":</h3>
+            {% for nodo in nodos %}
+                <div class="nodo-card">
+                    <h3>{{ nodo.nodo }}</h3>
+                    <p><strong>Dirección:</strong> {{ nodo.direccion }}</p>
+                    <p><strong>Subestación:</strong> {{ nodo.id_subestacion }}</p>
+                    {% if nodo.circuito1 %}
+                        <p><strong>Circuito 1:</strong> {{ nodo.circuito1 }}</p>
+                    {% endif %}
+                    {% if nodo.circuito2 %}
+                        <p><strong>Circuito 2:</strong> {{ nodo.circuito2 }}</p>
+                    {% endif %}
+                    
+                    <!-- Coordenadas -->
+                    <div class="coordenadas">
+                        <p><strong>Coordenadas:</strong></p>
+                        <p>Latitud: {{ nodo.latitud_processed|default:"No disponible" }}</p>
+                        <p>Longitud: {{ nodo.longitud_processed|default:"No disponible" }}</p>
+                    </div>
+
+                    <!-- Botón de ruta (solo si tiene coordenadas procesadas) -->
+                    {% if nodo.latitud_processed and nodo.longitud_processed %}
+                        <a href="https://www.google.com/maps/dir/?api=1&destination={{ nodo.latitud_processed }},{{ nodo.longitud_processed }}" 
+                           target="_blank" class="ruta-btn">
+                            📍 Ver Ruta en Google Maps
+                        </a>
+                    {% else %}
+                        <p style="color: #999;">Coordenadas no disponibles para ruta</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% elif query %}
+            <p>No se encontraron nodos para "{{ query }}"</p>
+        {% endif %}
+    </div>
+</body>
+</html>
