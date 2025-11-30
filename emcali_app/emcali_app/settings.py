@@ -3,26 +3,24 @@ Django settings for emcali_app project.
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
 import os
 
+# Cargar variables de entorno
+load_dotenv()
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ----------------------------------------------------
-# 🔐 SEGURIDAD
-# ----------------------------------------------------
-SECRET_KEY = 'django-insecure-#ie#8jer^tp!1dp+dpxz6upgp!rze2(6$#q@!c5#5=g7#$u$0_'
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv('SECRET_KEY', 'clave-por-defecto-solo-para-desarrollo')
 
-DEBUG = False  # En PythonAnywhere debe estar en False
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    'malejo.pythonanywhere.com',
-]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
 
-# ----------------------------------------------------
-# 📦 APPS
-# ----------------------------------------------------
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -33,9 +31,6 @@ INSTALLED_APPS = [
     'mantenimiento',
 ]
 
-# ----------------------------------------------------
-# 🔧 MIDDLEWARE
-# ----------------------------------------------------
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -48,9 +43,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'emcali_app.urls'
 
-# ----------------------------------------------------
-# 🎨 TEMPLATE CONFIG
-# ----------------------------------------------------
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -69,86 +61,54 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'emcali_app.wsgi.application'
 
-# ----------------------------------------------------
-# 🗄 BASE DE DATOS (MySQL en PythonAnywhere)
-# ----------------------------------------------------
+# Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'malejo$default',
-        'USER': 'malejo',
-        'PASSWORD': 'holahola123',
-        'HOST': 'malejo.mysql.pythonanywhere-services.com',
-        'PORT': '3306',
+        'NAME': os.getenv('DB_NAME', 'gap_db'),
+        'USER': os.getenv('DB_USER', 'root'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '3306'),
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
 
-# ----------------------------------------------------
-# 🔐 PASSWORD VALIDATION
-# ----------------------------------------------------
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
-# ----------------------------------------------------
-# 🌍 INTERNACIONALIZACIÓN
-# ----------------------------------------------------
+# Internationalization
 LANGUAGE_CODE = 'es'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
-# ----------------------------------------------------
-# 📂 STATIC FILES (CORREGIDO PARA PYTHONANYWHERE)
-# ----------------------------------------------------
-STATIC_URL = '/static/'
-STATIC_ROOT = '/home/malejo/emcali_app/staticfiles/'
-
-# 🔥 ELIMINA STATICFILES_DIRS en producción - CAUSA CONFLICTOS
-# STATICFILES_DIRS = []
-
-# ----------------------------------------------------
-# 📸 MEDIA FILES (CORREGIDO)
-# ----------------------------------------------------
-MEDIA_URL = '/media/'
-MEDIA_ROOT = '/home/malejo/emcali_app/media/'  # ← RUTA ABSOLUTA CORREGIDA
-
-# ----------------------------------------------------
-# 📧 EMAIL CONFIGURATION
-# ----------------------------------------------------
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "alejandropl2706@gmail.com"
-EMAIL_HOST_PASSWORD = "ymld ozsd ryfn dhdb"
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-
-# ----------------------------------------------------
-# 🔑 PRIMARY KEY
-# ----------------------------------------------------
+# Static files
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ----------------------------------------------------
-# ⚙️ CONFIGURACIÓN ADICIONAL PARA PYTHONANYWHERE
-# ----------------------------------------------------
-
-# Configuración para archivos subidos
-FILE_UPLOAD_PERMISSIONS = 0o644
-FILE_UPLOAD_DIRECTORY_PERMISSIONS = 0o755
-
-# Seguridad adicional en producción
-if not DEBUG:
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
+# Email configuration
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

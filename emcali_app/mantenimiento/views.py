@@ -671,7 +671,7 @@ def detalle_nodo_reco_comunicacion(request, nodo_id):
         'url_origen': url_origen  # <-- se pasa al template para el botón "Volver"
     })
 
-@role_required('jefe')
+@role_required('operario')
 def reporte_emergencia(request):
     nodos = Nodo.objects.all()
     subestaciones = Subestacion.objects.all()
