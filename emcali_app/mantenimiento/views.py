@@ -2687,9 +2687,13 @@ from .models import Nodo
 def buscar_nodos(request):
     nodos = None
     query = ""
-    
+
+    # Lista de nodos para autocompletar
+    nodos_lista = Nodo.objects.all().values('nodo').order_by('nodo')
+
     if 'q' in request.GET:
         query = request.GET.get('q')
+
         # Buscar por nodo, dirección, circuito o clasificación
         nodos = Nodo.objects.filter(
             Q(nodo__icontains=query) |
@@ -2698,17 +2702,17 @@ def buscar_nodos(request):
             Q(circuito2__icontains=query) |
             Q(clasificacion__icontains=query)
         ).select_related('id_subestacion')
-    
+
     # Procesar las coordenadas para reemplazar comas por puntos
     if nodos:
         for nodo in nodos:
             if nodo.latitud:
-                # Convertir a string y reemplazar comas por puntos
                 nodo.latitud_processed = str(nodo.latitud).replace(',', '.')
             if nodo.longitud:
                 nodo.longitud_processed = str(nodo.longitud).replace(',', '.')
-    
+
     return render(request, 'buscar_nodos.html', {
         'nodos': nodos,
-        'query': query
-    })    
+        'query': query,
+        'nodos_lista': nodos_lista
+    })
