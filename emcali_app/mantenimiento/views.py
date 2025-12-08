@@ -681,7 +681,9 @@ def reporte_emergencia(request):
             nodo_input = request.POST.get('nodo_nombre')
             tipo = request.POST.get('tipo')
 
-            # Validaciones iniciales
+            # -----------------------------
+            # VALIDACIONES BÁSICAS
+            # -----------------------------
             if not nodo_input:
                 messages.error(request, "Debe seleccionar un nodo o subestación.")
                 return render(request, 'reporte_emergencia_completo.html', {
@@ -691,37 +693,52 @@ def reporte_emergencia(request):
                 })
 
             if tipo not in ['reco', 'subestacion']:
-                messages.error(request, "Debe seleccionar un tipo válido (Subestación o Reconectador).")
+                messages.error(request, "Debe seleccionar un tipo válido.")
                 return render(request, 'reporte_emergencia_completo.html', {
                     'nodos': nodos,
                     'subestaciones': subestaciones,
                     'tipos': Orden.TIPO_CHOICES
                 })
 
-            # Buscar entidad según el tipo
+            # -----------------------------
+            # OBTENER OBJETO NODO/SUBESTACIÓN
+            # -----------------------------
             nodo_obj, sub_obj = None, None
+
             if tipo == 'reco':
                 nodo_obj = Nodo.objects.get(nodo=int(nodo_input))
             else:
                 sub_obj = Subestacion.objects.get(nombre=nodo_input)
 
-            # Manejo de coordenadas y tiempos
+            # -----------------------------
+            # COORDENADAS
+            # -----------------------------
             def parse_decimal(value):
                 try:
                     return Decimal(value) if value else None
                 except InvalidOperation:
                     return None
 
-            if tipo == 'reco':
-                latitud = parse_decimal(request.POST.get('latitud'))
-                longitud = parse_decimal(request.POST.get('longitud'))
-                inicio_dt = request.POST.get('inicio_actividad') or timezone.now()
-            else:
-                latitud = parse_decimal(request.POST.get('latitud_sub'))
-                longitud = parse_decimal(request.POST.get('longitud_sub'))
-                inicio_dt = request.POST.get('hora_inicio') or timezone.now()
+            latitud = parse_decimal(request.POST.get('latitud'))
+            longitud = parse_decimal(request.POST.get('longitud'))
 
-            # Crear la orden
+            # -----------------------------
+            # FECHAS
+            # -----------------------------
+            inicio_dt = timezone.now()
+
+            # -----------------------------
+            # TRABAJADOR
+            # -----------------------------
+            try:
+                trabajador = Trabajador.objects.get(user=request.user)
+            except Trabajador.DoesNotExist:
+                messages.error(request, "No existe un trabajador asociado a este usuario.")
+                return redirect('reporte_emergencia')
+
+            # -----------------------------
+            # CREAR ORDEN
+            # -----------------------------
             orden = Orden.objects.create(
                 tipo=tipo,
                 descripcion='Reporte de emergencia',
@@ -730,13 +747,15 @@ def reporte_emergencia(request):
                 estado_orden='pendiente_por_revisar',
                 fecha=timezone.now().date(),
                 n_orden='EMERG-' + timezone.now().strftime('%Y%m%d%H%M%S'),
-                creada_por=request.user if request.user.is_authenticated else None,
+                creada_por=trabajador,
                 asignada_a=None
             )
 
-            # Crear informe asociado
+            # -----------------------------
+            # CREAR INFORME RECO — COMPLETO
+            # -----------------------------
             if tipo == 'reco':
-                InformeReco.objects.create(
+                informe = InformeReco.objects.create(
                     orden=orden,
                     inicio_actividad=inicio_dt,
                     falla_identificada=request.POST.get('falla_identificada'),
@@ -745,11 +764,25 @@ def reporte_emergencia(request):
                     hora_cierre=timezone.now(),
                     longitud=longitud,
                     latitud=latitud,
-                    aviso_telco=bool(request.POST.get('aviso_telco')),
+
+                    # ✔ NUEVO → Telco / Mantenimiento
+                    aviso_telco=request.POST.get('aviso_telco') == 'on',
                     detalle_telco=request.POST.get('detalle_telco'),
-                    aviso_mante=bool(request.POST.get('aviso_mante')),
+                    aviso_mante=request.POST.get('aviso_mante') == 'on',
                     detalle_mante=request.POST.get('detalle_mante'),
                 )
+
+                # -----------------------------
+                # FOTOS (máximo 3)
+                # -----------------------------
+                for campo in ['foto1', 'foto2', 'foto3']:
+                    archivo = request.FILES.get(campo)
+                    if archivo:
+                        FotoInformeReco.objects.create(informe=informe, imagen=archivo)
+
+            # -----------------------------
+            # INFORME SUBESTACIÓN
+            # -----------------------------
             else:
                 Subestacion_comu_informe.objects.create(
                     orden=orden,
@@ -764,10 +797,13 @@ def reporte_emergencia(request):
             messages.success(request, "✅ Reporte de emergencia creado exitosamente.")
             return redirect('lista_ordenes')
 
-        except (InvalidOperation, ValueError, Nodo.DoesNotExist, Subestacion.DoesNotExist):
-            messages.error(request, "El nodo o subestación ingresado no existe o el formato es inválido.")
+        except Exception as e:
+            print("ERROR:", e)
+            messages.error(request, "Error creando el reporte. Verifique los datos.")
 
-    # GET: primera carga
+    # -----------------------------
+    # GET
+    # -----------------------------
     return render(request, 'reporte_emergencia_completo.html', {
         'nodos': nodos,
         'subestaciones': subestaciones,
