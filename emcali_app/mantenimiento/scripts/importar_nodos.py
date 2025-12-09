@@ -22,35 +22,34 @@ def importar_nodos():
     # Limpiar nombres de columnas
     df.columns = df.columns.str.strip().str.lower()
 
-    # === Convertir NODO a entero seguro ===
+    # === Convertir NODO a entero REAL ===
     def convertir_nodo(val):
         if pd.isna(val) or val == '':
             return None
         try:
-            return int(float(val))  # 5224080.0 → 5224080
+            return int(float(val))   # 5224080.0 → 5224080 SIEMPRE entero
         except:
             return None
 
-    if 'nodo' in df.columns:
-        df['nodo'] = df['nodo'].apply(convertir_nodo)
+    df['nodo'] = df['nodo'].apply(convertir_nodo)
 
-    # Limpiar texto en columnas no numéricas
+    # Limpiar texto
     for col in ['direccion', 'circuito 1', 'circuito 2', 'nt', 'clasificacion']:
         if col in df.columns:
             df[col] = df[col].astype(str).str.strip().replace('nan', '')
 
-    # === Convertir id_subestacion a entero seguro ===
-    if 'id_subestacion' in df.columns:
-        def convertir_id(val):
-            if pd.isna(val) or val == '':
-                return None
-            try:
-                return int(float(val))
-            except ValueError:
-                return None
-        df['id_subestacion'] = df['id_subestacion'].apply(convertir_id)
+    # === Convertir id_subestacion ===
+    def convertir_id(val):
+        if pd.isna(val) or val == '':
+            return None
+        try:
+            return int(float(val))
+        except:
+            return None
 
-    # Eliminar filas sin nodo o sin subestación
+    df['id_subestacion'] = df['id_subestacion'].apply(convertir_id)
+
+    # Filtrar filas válidas
     df = df[df['nodo'].notna()]
     df = df[df['id_subestacion'].notna()]
 
@@ -60,14 +59,14 @@ def importar_nodos():
     nodos_no_importados = []
 
     for _, row in df.iterrows():
-        nodo_num = row.get('nodo')
+        nodo_num = int(row['nodo'])   # 👈 Asegura entero SIN DECIMALES
 
         try:
             # Buscar subestación
             try:
                 subestacion = Subestacion.objects.get(id=row['id_subestacion'])
             except Subestacion.DoesNotExist:
-                print(f"⚠ Subestación '{row['id_subestacion']}' no encontrada. Nodo '{nodo_num}' NO importado.")
+                print(f"⚠ Subestación '{row['id_subestacion']}' no encontrada. Nodo {nodo_num} NO importado.")
                 nodos_no_importados.append(nodo_num)
                 continue
 
@@ -84,7 +83,7 @@ def importar_nodos():
             nodos_bulk.append(nodo)
 
         except Exception as e:
-            print(f"❌ Error inesperado al importar nodo '{nodo_num}': {e}")
+            print(f"❌ Error inesperado al importar nodo {nodo_num}: {e}")
             nodos_no_importados.append(nodo_num)
             continue
 
