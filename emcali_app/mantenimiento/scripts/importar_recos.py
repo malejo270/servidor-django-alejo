@@ -21,73 +21,46 @@ def importar_recos():
     # Limpiar nombres de columnas
     df.columns = df.columns.str.strip().str.lower()
 
-    # --- Asegurar columna NODO ---
-    if "nodo" not in df.columns:
-        print("❌ ERROR: La hoja 'Reco' debe tener una columna llamada 'Nodo'.")
-        return
-
-    # Convertir nodo a entero
-    def convertir_nodo(val):
-        if pd.isna(val) or val == "":
-            return None
-        try:
-            return int(float(val))  # 5224080.0 → 5224080
-        except:
-            return None
-
-    df["nodo"] = df["nodo"].apply(convertir_nodo)
-
     # Limpiar texto en columnas
-    for col in ["responsable", "marca"]:
+    for col in ['responsable', 'marca']:
         if col in df.columns:
-            df[col] = df[col].astype(str).strip().replace("nan", "")
+            df[col] = df[col].astype(str).str.strip().replace('nan', '')
 
-    # Eliminar filas sin nodo válido
-    df = df[df["nodo"].notna()]
+    # Convertir id_nodo a entero seguro
+    if 'id_nodo' in df.columns:
+        def convertir_id(val):
+            if pd.isna(val) or val == '':
+                return None
+            try:
+                return int(float(val))
+            except ValueError:
+                return None
+        df['id_nodo'] = df['id_nodo'].apply(convertir_id)
+
+    # Eliminar filas con id_nodo vacío
+    df = df[df['id_nodo'].notna()]
 
     print("Columnas detectadas:", df.columns.tolist())
-    print(df[["responsable", "nodo"]].head())
+    print(df[['responsable', 'id_nodo']].head())
 
     recos_bulk = []
-    recos_no_importados = []
 
     for _, row in df.iterrows():
-        nodo_excel = row.get("nodo")
-        responsable_excel = row.get("responsable", "")
-
         try:
-            # Buscar nodo por su número real
-            try:
-                nodo = Nodo.objects.get(nodo=nodo_excel)
-            except Nodo.DoesNotExist:
-                print(f"⚠ NO existe el nodo '{nodo_excel}'. RECO '{responsable_excel}' NO importado.")
-                recos_no_importados.append((nodo_excel, responsable_excel))
-                continue
-
-            # Crear objeto reconectador
-            reco = Reconectador(
-                responsable=responsable_excel,
-                marca=row.get("marca", ""),
-                id_nodo=nodo
-            )
-            recos_bulk.append(reco)
-
-        except Exception as e:
-            print(f"❌ Error inesperado con NODO '{nodo_excel}' y RECO '{responsable_excel}': {e}")
-            recos_no_importados.append((nodo_excel, responsable_excel))
+            nodo = Nodo.objects.get(id_nodo=row['id_nodo'])
+        except Nodo.DoesNotExist:
+            print(f"⚠ ID de nodo '{row['id_nodo']}' no encontrado en BD. Reco '{row['responsable']}' no importado.")
             continue
 
-    # Guardado en bulk
-    Reconectador.objects.bulk_create(recos_bulk)
-    print(f"\n✅ Se importaron {len(recos_bulk)} recos correctamente")
+        reco = Reconectador(
+            responsable=row.get('responsable', ''),
+            marca=row.get('marca', ''),
+            id_nodo=nodo
+        )
+        recos_bulk.append(reco)
 
-    # Mostrar recos fallidos
-    if recos_no_importados:
-        print("\n🚨 RECOS que NO se importaron:")
-        for nodo_fallido, responsable_fallido in recos_no_importados:
-            print(f"   - Nodo: {nodo_fallido} | Responsable: {responsable_fallido}")
-    else:
-        print("✅ Todos los RECOs se importaron correctamente.")
+    Reconectador.objects.bulk_create(recos_bulk)
+    print(f"✅ Se importaron {len(recos_bulk)} recos")
 
 if __name__ == "__main__":
     importar_recos()
