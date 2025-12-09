@@ -198,27 +198,27 @@ def crear_nodo(request):
 @role_required('jefe')
 def crear_reco(request):
     if request.method == 'POST':
-        activo = request.POST.get('activo') == 'on'
         sn_activo = request.POST.get('sn_activo')
         n_equipo = request.POST.get('n_equipo')
-        foto = request.FILES.get('foto')  # 👈 aquí recogemos la imagen
-        nodo_nombre = request.POST.get('nodo')  # se recibe el nombre del nodo
-        serial_reco = request.POST.get('serial')  # el input se llama "serial", pero el campo es serial_reco
+        foto = request.FILES.get('foto')  # imagen
+        nodo_nombre = request.POST.get('nodo')  # nombre del nodo
+        serial_reco = request.POST.get('serial')  # input: serial
         modelo = request.POST.get('modelo')
         fecha_instalacion = request.POST.get('fecha_instalacion')
         responsable = request.POST.get('responsable')
         marca = request.POST.get('marca')
-        estado_reconectador = request.POST.get('estado')  # igual: input se llama "estado"
+        estado_reconectador = request.POST.get('estado')  # input: estado
         Icc = request.POST.get('Icc')
 
+        # Buscar nodo
         try:
             nodo_obj = Nodo.objects.get(nodo=nodo_nombre)
         except Nodo.DoesNotExist:
             messages.error(request, "Nodo no encontrado.")
             return redirect('crear_reco')
 
+        # Crear objeto SIN el campo "activo"
         reco = Reconectador(
-            activo=activo,
             sn_activo=sn_activo,
             n_equipo=n_equipo,
             id_nodo=nodo_obj,
@@ -231,14 +231,15 @@ def crear_reco(request):
             Icc=Icc
         )
 
-        # 👇 asignamos la foto si el usuario la subió
+        # Asignar foto si la subieron
         if foto:
             reco.foto = foto
 
         reco.save()
         messages.success(request, "Reconectador creado exitosamente.")
-        return redirect('crear_reco')
+        return redirect('vista_general_recos')
 
+    # GET → mostrar formulario
     nodos = Nodo.objects.all()
     return render(request, 'crear_reco.html', {'nodos': nodos})
 # ----------------------------------------
