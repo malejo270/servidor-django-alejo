@@ -172,7 +172,7 @@ def crear_nodo(request):
             # Mensaje de confirmación
             messages.success(request, "Nodo registrado correctamente.")
             # Redirige nuevamente a la vista de creación de nodo
-            return redirect('crear_nodo')
+            return redirect('vista_general_recos')
         else:
             # Si el formulario tiene errores, muestra mensaje de error
             messages.error(
@@ -272,7 +272,7 @@ def crear_comunicacion(request):
         )
 
         messages.success(request, "Comunicación registrada exitosamente.")
-        return redirect('crear_comunicacion')
+        return redirect('vista_general_recos')
 
     # Traemos todos los reconectadores con su nodo relacionado
     reconectadores = Reconectador.objects.select_related('id_nodo').all()
