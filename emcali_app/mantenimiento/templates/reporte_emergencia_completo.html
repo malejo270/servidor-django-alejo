@@ -1,7 +1,68 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div style="max-width: 700px; margin: 40px auto; font-family: Arial, sans-serif;">
+
+<!-- 🔧 ESTILO RESPONSIVE GLOBAL SIN CAMBIAR TU DISEÑO -->
+<style>
+    /* Evitar scroll lateral */
+    body, html {
+        overflow-x: hidden !important;
+    }
+
+    /* Asegurar que todo se adapte sin cortar */
+    * {
+        max-width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* Contenedor principal */
+    .contenedor-emergencia {
+        max-width: 700px;
+        margin: 40px auto;
+        font-family: Arial, sans-serif;
+        padding: 0 15px;
+    }
+
+    /* Formulario */
+    .form-box {
+        background: #fff;
+        padding: 30px 40px;
+        border-left: 6px solid #ffcc00;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 8px;
+        width: 100%;
+    }
+
+    /* ✔️ Nueva clase para alinear checkbox */
+    .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    /* RESPONSIVE MÓVIL */
+    @media (max-width: 768px) {
+        .contenedor-emergencia {
+            padding: 10px;
+            margin: 20px auto;
+        }
+
+        .form-box {
+            padding: 20px;
+        }
+
+        input, select, textarea {
+            width: 100% !important;
+        }
+
+        .preview-div img {
+            max-height: 120px !important;
+        }
+    }
+</style>
+
+<div class="contenedor-emergencia">
 
     <!-- Botón de volver -->
     <div style="margin-bottom: 20px;">
@@ -16,30 +77,23 @@
         🚨 Reporte de Emergencia
     </h2>
 
-    <form id="form-reco" method="post" enctype="multipart/form-data"
-          style="background: #fff; padding: 30px 40px; border-left: 6px solid #ffcc00;
-                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); border-radius: 8px;">
+    <form id="form-reco" method="post" enctype="multipart/form-data" class="form-box">
         {% csrf_token %}
 
         {% if messages %}
         <div style="margin-bottom: 20px;">
             {% for message in messages %}
-                {% if message.tags == 'error' %}
-                    <div style="padding:10px; border-radius:5px; margin-bottom:10px;
-                                background-color:#f8d7da; color:#721c24;">
-                        {{ message }}
-                    </div>
-                {% elif message.tags == 'success' %}
-                    <div style="padding:10px; border-radius:5px; margin-bottom:10px;
-                                background-color:#d4edda; color:#155724;">
-                        {{ message }}
-                    </div>
-                {% else %}
-                    <div style="padding:10px; border-radius:5px; margin-bottom:10px;
-                                background-color:#e2e3e5; color:#41464b;">
-                        {{ message }}
-                    </div>
-                {% endif %}
+                <div style="padding:10px; border-radius:5px; margin-bottom:10px;
+                            background-color:
+                            {% if message.tags == 'error' %}#f8d7da
+                            {% elif message.tags == 'success' %}#d4edda
+                            {% else %}#e2e3e5{% endif %};
+                            color:
+                            {% if message.tags == 'error' %}#721c24
+                            {% elif message.tags == 'success' %}#155724
+                            {% else %}#41464b{% endif %};">
+                    {{ message }}
+                </div>
             {% endfor %}
         </div>
         {% endif %}
@@ -114,10 +168,10 @@
                                  border: 1px solid #ccc;"></textarea>
             </div>
 
-            <!-- TELCO -->
-            <div style="margin-bottom: 15px;">
+            <!-- ✔️ TELCO alineado -->
+            <div class="checkbox-row">
                 <label style="font-weight: bold;">Aviso a TELCO:</label>
-                <input type="checkbox" id="aviso_telco" name="aviso_telco" style="margin-left: 8px;">
+                <input type="checkbox" id="aviso_telco" name="aviso_telco">
             </div>
 
             <div id="detalle_telco_container" class="d-none" style="margin-bottom: 20px;">
@@ -127,10 +181,10 @@
                                  border: 1px solid #ccc;"></textarea>
             </div>
 
-            <!-- MANTENIMIENTO -->
-            <div style="margin-bottom: 15px;">
+            <!-- ✔️ MANTENIMIENTO alineado -->
+            <div class="checkbox-row">
                 <label style="font-weight: bold;">Aviso a Mantenimiento:</label>
-                <input type="checkbox" id="aviso_mante" name="aviso_mante" style="margin-left: 8px;">
+                <input type="checkbox" id="aviso_mante" name="aviso_mante">
             </div>
 
             <div id="detalle_mante_container" class="d-none" style="margin-bottom: 20px;">
@@ -262,7 +316,7 @@ function getLocation() {
 
 
 /* -----------------------------------------------------
-   🔥 AQUI AGREGO COMPLETO TU SCRIPT ADAPTADO A TU HTML
+   🔥 SCRIPT COMPLETO DE AUTOGUARDADO + PREVIEW
 ------------------------------------------------------ */
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -271,7 +325,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const latInput = document.getElementById('latitud');
     const lonInput = document.getElementById('longitud');
 
-    /* ---- GEO ---- */
     function inicializarGeolocalizacion() {
         if (btnGuardar) btnGuardar.disabled = false;
 
@@ -434,7 +487,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    /* ---- Inicializar TODO ---- */
     inicializarGeolocalizacion();
     inicializarControlesDinamicos();
     inicializarAutoGuardado();
