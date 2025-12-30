@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <!-- ===================== -->
+    <!-- 🔹 INFO GENERAL -->
+    <!-- ===================== -->
+    <h2 class="mb-3 text-center">Información General</h2>
+
+    <div class="row text-center mb-4">
+        <div class="col-md-4 mb-2">
+            <div class="card p-3 shadow-sm">
+                Nodos<br><b>{{ total_nodos }}</b>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card p-3 shadow-sm">
+                Reconectadores<br><b>{{ total_reconectadores }}</b>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card p-3 shadow-sm">
+                Comunicaciones<br><b>{{ total_comunicaciones }}</b>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- 🔹 ÓRDENES -->
+    <!-- ===================== -->
+    <h2 class="mb-3 text-center">Órdenes</h2>
+
+    <div class="row text-center mb-3">
+        <div class="col-md-12 mb-2">
+            <div class="card p-3 shadow-sm">
+                Total Órdenes<br><b>{{ total_ordenes }}</b>
+            </div>
+        </div>
+    </div>
+
+    <div class="row text-center mb-4">
+        <div class="col-md-6 mb-2">
+            <div class="card p-3 shadow-sm">
+                Órdenes Reconectador<br><b>{{ ordenes_reconectador }}</b>
+            </div>
+        </div>
+        <div class="col-md-6 mb-2">
+            <div class="card p-3 shadow-sm">
+                Órdenes Subestación<br><b>{{ ordenes_subestacion }}</b>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- 🔹 ESTADO DE LAS ÓRDENES -->
+    <!-- ===================== -->
+    <h2 class="mb-3 text-center">Estado de las Órdenes</h2>
+
+    <div class="row text-center mb-4">
+        <div class="col-md-4 mb-2">
+            <div class="card p-3 shadow-sm border-warning">
+                Pendientes<br><b>{{ ordenes_pendientes }}</b>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card p-3 shadow-sm border-info">
+                Pendiente Revisión<br><b>{{ ordenes_pendiente_revision }}</b>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card p-3 shadow-sm border-success">
+                Completadas<br><b>{{ ordenes_completadas }}</b>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- 🔹 TIEMPOS PROMEDIO -->
+    <!-- ===================== -->
+  
+
+    <!-- ===================== -->
+    <!-- 🔹 GRÁFICOS -->
+    <!-- ===================== -->
+    <h2 class="mb-3 text-center">Estadísticas</h2>
+
+    <div class="row">
+
+        <!-- 2 por fila -->
+        <div class="col-md-6 mb-3">
+            <div class="card p-3 shadow-sm">
+                {{ grafico_reco_sub|safe }}
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card p-3 shadow-sm">
+                {{ grafico_reco_marca|safe }}
+            </div>
+        </div>
+
+        <!-- 🔥 UNO SOLO -->
+        <div class="col-md-12 mb-3">
+            <div class="card p-3 shadow-sm">
+                {{ grafico_reco_circuito|safe }}
+            </div>
+        </div>
+
+        <!-- 2 por fila -->
+        <div class="col-md-6 mb-3">
+            <div class="card p-3 shadow-sm">
+                {{ grafico_tecnologia|safe }}
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+            <div class="card p-3 shadow-sm">
+                {{ grafico_estado_comu|safe }}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ===================== -->
+<!-- 🔹 REDIRECCIONES -->
+<!-- ===================== -->
+<script>
+document.querySelectorAll(".plotly-graph-div").forEach(function(grafico) {
+
+    grafico.on('plotly_click', function(data) {
+
+        const valor = data.points[0].customdata;
+        const tipo = data.points[0].data.name;
+
+        if (tipo === "Subestación") {
+            window.location.href = `/reconectadores/subestacion/${valor}/`;
+        }
+        else if (tipo === "Marca") {
+            window.location.href = `/reconectadores/marca/${valor}/`;
+        }
+        else if (tipo === "Circuito") {
+            window.location.href = `/reconectadores/circuito/${valor}/`;
+        }
+        else if (tipo === "Tecnología") {
+            window.location.href = `/dashboard/comunicaciones/tecnologia/${valor}/`;
+        }
+        else if (tipo === "Estado") {
+            window.location.href = `/dashboard/comunicaciones/estado/${valor}/`;
+        }
+
+    });
+
+});
+</script>
+
+{% endblock %}

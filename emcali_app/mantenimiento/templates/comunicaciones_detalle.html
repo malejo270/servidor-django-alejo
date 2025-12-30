@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <div class="card shadow p-4">
+        <h4 class="mb-3">{{ titulo }}</h4>
+
+        <table class="table table-bordered table-hover" id="tabla-comu">
+            <thead class="table-dark">
+                <tr>
+                    <th>
+                        Modem<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                    <th>
+                        IP<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                    <th>
+                        Tecnología<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                    <th>
+                        Estado<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                    <th>
+                        Reconectador<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in comunicaciones %}
+                <tr>
+                    <td>{{ c.modem }}</td>
+                    <td>{{ c.ip }}</td>
+                    <td>{{ c.tecnologia }}</td>
+                    <td>{{ c.estado }}</td>
+                    <td>
+                        {% if c.id_reco %}
+                            {{ c.id_reco }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="javascript:history.back()" class="btn btn-secondary">⬅ Volver</a>
+    </div>
+</div>
+
+<!-- ===================== -->
+<!-- 🔍 FILTROS POR COLUMNA -->
+<!-- ===================== -->
+<script>
+document.querySelectorAll("#tabla-comu .filtro").forEach((input, index) => {
+    input.addEventListener("keyup", function () {
+        const filtro = this.value.toLowerCase();
+        const filas = document.querySelectorAll("#tabla-comu tbody tr");
+
+        filas.forEach(fila => {
+            const celda = fila.children[index].innerText.toLowerCase();
+            fila.style.display = celda.includes(filtro) ? "" : "none";
+        });
+    });
+});
+</script>
+
+{% endblock %}

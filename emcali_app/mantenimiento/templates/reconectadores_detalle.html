@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <div class="card shadow p-4">
+        <h4 class="mb-3">{{ titulo }}</h4>
+
+        <table class="table table-bordered table-hover" id="tabla-recos">
+            <thead class="table-dark">
+                <tr>
+                    <th>
+                        Equipo<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                    <th>
+                        Serial<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                    <th>
+                        Marca<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                    <th>
+                        Modelo<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                    <th>
+                        Nodo<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                    <th>
+                        Estado<br>
+                        <input type="text" class="form-control form-control-sm filtro" placeholder="Filtrar">
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for reco in reconectadores %}
+                <tr>
+                    <td>{{ reco.n_equipo }}</td>
+                    <td>{{ reco.serial_reco }}</td>
+                    <td>{{ reco.marca }}</td>
+                    <td>{{ reco.modelo }}</td>
+                    <td>{{ reco.id_nodo.nodo }}</td>
+                    <td>{{ reco.estado_reconectador }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="javascript:history.back()" class="btn btn-secondary">⬅ Volver</a>
+    </div>
+</div>
+
+<!-- ===================== -->
+<!-- 🔍 FILTROS POR COLUMNA -->
+<!-- ===================== -->
+<script>
+document.querySelectorAll(".filtro").forEach((input, index) => {
+    input.addEventListener("keyup", function () {
+        const filtro = this.value.toLowerCase();
+        const filas = document.querySelectorAll("#tabla-recos tbody tr");
+
+        filas.forEach(fila => {
+            const celda = fila.children[index].innerText.toLowerCase();
+            fila.style.display = celda.includes(filtro) ? "" : "none";
+        });
+    });
+});
+</script>
+
+{% endblock %}

@@ -25,7 +25,7 @@ from mantenimiento.views import (
     filtrar_padres, crear_pregunta_padre, eliminar_pregunta_padre,
     historico_subestacion, pruebapotly, mapa_ordenes, grafico_fallas,
     historial_nodo, registrar_usuario, ver_ruta_nodo, solicitar_codigo,
-    verificar_codigo, cambiar_contrasena, dashboard_estadisticas_completo,buscar_nodos
+    verificar_codigo, cambiar_contrasena, dashboard_estadisticas_completo,buscar_nodos,data_total,reconectadores_por_subestacion_detalle,reconectadores_por_marca,reconectadores_por_circuito,comunicaciones_por_tecnologia,comunicaciones_por_estado,grafico_marca_reco_emcali,bot_preguntar_ia
 )
 
 urlpatterns = [
@@ -110,6 +110,38 @@ urlpatterns = [
     path("verificar/", verificar_codigo, name="verificar_codigo"),
     path("cambiar/", cambiar_contrasena, name="cambiar_contrasena"),
     path('buscar-nodos/', buscar_nodos, name='buscar_nodos'),
+     path('dashboard/marca-reco-emcali/', grafico_marca_reco_emcali, name='marca_reco_emcali'),
+
+
+
+
+
+     path("dashboard/data-total/", data_total, name="data_total"),
+
+    path(
+        "reconectadores/subestacion/<int:subestacion_id>/",
+       reconectadores_por_subestacion_detalle
+    ),
+    path(
+        "reconectadores/marca/<str:marca>/",
+        reconectadores_por_marca
+    ),
+    path(
+        "reconectadores/circuito/<str:circuito>/",
+        reconectadores_por_circuito
+    ),
+
+    path(
+        "dashboard/comunicaciones/tecnologia/<str:tecnologia>/",
+        comunicaciones_por_tecnologia,
+        name="comu_por_tecnologia"
+    ),
+    path(
+        "dashboard/comunicaciones/estado/<str:estado>/",
+        comunicaciones_por_estado,
+        name="comu_por_estado"
+    ),
+     path("bot/preguntar/", bot_preguntar_ia, name="bot_preguntar_ia")
 ]
 
 # 🔥 SERVIR MEDIA EN PYTHONANYWHERE

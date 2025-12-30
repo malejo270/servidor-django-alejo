@@ -9,6 +9,26 @@ from .decorators import role_required
 from django.core.mail import send_mail
 from django.contrib import messages
 import random
+
+from django.shortcuts import render
+from django.db.models import (
+    Count,
+    Avg,
+    F,
+    ExpressionWrapper,
+    DurationField
+)
+from datetime import timedelta
+import plotly.graph_objects as go
+
+from .models import (
+    Reconectador,
+    Comunicacion,
+    InformeReco,
+    Orden,
+    Nodo
+)
+
 def volver_loguien(request):
     return(render, login_required)
 
@@ -2753,3 +2773,539 @@ def buscar_nodos(request):
         'query': query,
         'nodos_lista': nodos_lista
     })
+
+def data_total(request):
+
+    # =====================================================
+    # 🔹 TOTALES GENERALES
+    # =====================================================
+    total_nodos = Nodo.objects.count()
+    total_reconectadores = Reconectador.objects.count()
+    total_comunicaciones = Comunicacion.objects.count()
+
+    total_ordenes = Orden.objects.count()
+
+    # ⚠️ CORREGIDO: el campo es "tipo"
+    ordenes_subestacion = Orden.objects.filter(tipo="subestacion").count()
+    ordenes_reconectador = Orden.objects.filter(tipo="reco").count()
+
+    # =====================================================
+    # 🔹 ESTADOS DE ORDEN
+    # =====================================================
+    ordenes_completadas = Orden.objects.filter(estado_orden="completada").count()
+    ordenes_pendiente_revision = Orden.objects.filter(
+        estado_orden="pendiente_por_revisar"
+    ).count()
+    ordenes_pendientes = Orden.objects.filter(estado_orden="pendiente").count()
+
+    # =====================================================
+    # 🔹 TIEMPOS PROMEDIO (RECONEXTADORES)
+    # =====================================================
+    tiempo_respuesta = InformeReco.objects.annotate(
+        tiempo=ExpressionWrapper(
+            F("inicio_actividad") - F("orden__fecha"),
+            output_field=DurationField()
+        )
+    ).aggregate(promedio=Avg("tiempo"))["promedio"]
+
+    tiempo_completado = InformeReco.objects.exclude(
+        hora_cierre__isnull=True
+    ).annotate(
+        tiempo=ExpressionWrapper(
+            F("hora_cierre") - F("inicio_actividad"),
+            output_field=DurationField()
+        )
+    ).aggregate(promedio=Avg("tiempo"))["promedio"]
+
+    # =====================================================
+    # 🔹 GRAFICO: RECONECTADORES POR SUBESTACIÓN
+    # =====================================================
+    data_sub = (
+        Reconectador.objects
+        .values(
+            'id_nodo__id_subestacion__id',
+            'id_nodo__id_subestacion__nombre'
+        )
+        .annotate(total=Count('id_reco'))
+    )
+
+    fig_sub = go.Figure([
+        go.Bar(
+            x=[d['id_nodo__id_subestacion__nombre'] for d in data_sub],
+            y=[d['total'] for d in data_sub],
+            customdata=[d['id_nodo__id_subestacion__id'] for d in data_sub],
+            name="Subestación"
+        )
+    ])
+    fig_sub.update_layout(title="Reconectadores por Subestación")
+
+    # =====================================================
+    # 🔹 GRAFICO: RECONECTADORES POR MARCA
+    # =====================================================
+    data_marca = (
+        Reconectador.objects
+        .values('marca')
+        .annotate(total=Count('id_reco'))
+        .order_by('-total')
+    )
+
+    fig_marca = go.Figure([
+        go.Bar(
+            x=[d['marca'] for d in data_marca],
+            y=[d['total'] for d in data_marca],
+            customdata=[d['marca'] for d in data_marca],
+            name="Marca"
+        )
+    ])
+    fig_marca.update_layout(title="Reconectadores por Marca")
+
+    # =====================================================
+    # 🔹 GRAFICO: RECONECTADORES POR CIRCUITO
+    # =====================================================
+    data_circuito = (
+        Reconectador.objects
+        .exclude(id_nodo__circuito1__isnull=True)
+        .values('id_nodo__circuito1')
+        .annotate(total=Count('id_reco'))
+    )
+
+    fig_circuito = go.Figure([
+        go.Bar(
+            x=[d['id_nodo__circuito1'] for d in data_circuito],
+            y=[d['total'] for d in data_circuito],
+            customdata=[d['id_nodo__circuito1'] for d in data_circuito],
+            name="Circuito"
+        )
+    ])
+    fig_circuito.update_layout(title="Reconectadores por Circuito")
+
+    # =====================================================
+    # 🔹 GRAFICO: MODEM POR TECNOLOGÍA
+    # =====================================================
+    data_tecnologia = (
+        Comunicacion.objects
+        .values('tecnologia')
+        .annotate(total=Count('id_comunicacion'))
+    )
+
+    fig_tecnologia = go.Figure([
+        go.Bar(
+            x=[d['tecnologia'] for d in data_tecnologia],
+            y=[d['total'] for d in data_tecnologia],
+            customdata=[d['tecnologia'] for d in data_tecnologia],
+            name="Tecnología"
+        )
+    ])
+    fig_tecnologia.update_layout(title="Modem por Tecnología")
+
+    # =====================================================
+    # 🔹 GRAFICO: ESTADO DE COMUNICACIÓN
+    # =====================================================
+    data_estado_comu = (
+        Comunicacion.objects
+        .values('estado')
+        .annotate(total=Count('id_comunicacion'))
+    )
+
+    fig_estado_comu = go.Figure([
+        go.Bar(
+            x=[d['estado'] for d in data_estado_comu],
+            y=[d['total'] for d in data_estado_comu],
+            customdata=[d['estado'] for d in data_estado_comu],
+            name="Estado"
+        )
+    ])
+    fig_estado_comu.update_layout(title="Estado de la Comunicación")
+
+    # =====================================================
+    # 🔹 CONTEXTO
+    # =====================================================
+    return render(request, "data_total.html", {
+
+        # Totales
+        "total_nodos": total_nodos,
+        "total_reconectadores": total_reconectadores,
+        "total_comunicaciones": total_comunicaciones,
+        "total_ordenes": total_ordenes,
+        "ordenes_subestacion": ordenes_subestacion,
+        "ordenes_reconectador": ordenes_reconectador,
+
+        # Estados
+        "ordenes_completadas": ordenes_completadas,
+        "ordenes_pendiente_revision": ordenes_pendiente_revision,
+        "ordenes_pendientes": ordenes_pendientes,
+
+        # Tiempos
+        "tiempo_respuesta": tiempo_respuesta,
+        "tiempo_completado": tiempo_completado,
+
+        # Gráficos
+        "grafico_reco_sub": fig_sub.to_html(full_html=False),
+        "grafico_reco_marca": fig_marca.to_html(full_html=False),
+        "grafico_reco_circuito": fig_circuito.to_html(full_html=False),
+        "grafico_tecnologia": fig_tecnologia.to_html(full_html=False),
+        "grafico_estado_comu": fig_estado_comu.to_html(full_html=False),
+    })
+
+
+# =====================================================
+# 🔹 VISTAS DE DETALLE (CLICK EN BARRAS)
+# =====================================================
+def reconectadores_por_subestacion_detalle(request, subestacion_id):
+    subestacion = get_object_or_404(Subestacion, id=subestacion_id)
+    reconectadores = Reconectador.objects.filter(
+        id_nodo__id_subestacion=subestacion
+    )
+    return render(request, "reconectadores_detalle.html", {
+        "titulo": f"Subestación {subestacion.nombre}",
+        "reconectadores": reconectadores
+    })
+
+
+def reconectadores_por_marca(request, marca):
+    reconectadores = Reconectador.objects.filter(marca=marca)
+    return render(request, "reconectadores_detalle.html", {
+        "titulo": f"Marca {marca}",
+        "reconectadores": reconectadores
+    })
+
+
+def reconectadores_por_circuito(request, circuito):
+    reconectadores = Reconectador.objects.filter(id_nodo__circuito1=circuito)
+    return render(request, "reconectadores_detalle.html", {
+        "titulo": f"Circuito {circuito}",
+        "reconectadores": reconectadores
+    })
+
+
+def comunicaciones_por_tecnologia(request, tecnologia):
+    comunicaciones = Comunicacion.objects.filter(tecnologia=tecnologia)
+    return render(request, "reconectadores_detalle.html", {
+        "titulo": f"Tecnología {tecnologia}",
+        "comunicaciones": comunicaciones
+    })
+
+
+def comunicaciones_por_estado(request, estado):
+    comunicaciones = Comunicacion.objects.filter(estado=estado)
+    return render(request, "reconectadores_detalle.html", {
+        "titulo": f"Estado {estado}",
+        "comunicaciones": comunicaciones
+    })   
+
+import json
+import re
+import requests
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+from .models import (
+    Subestacion,
+    Reconectador,
+    Nodo,
+    Comunicacion,
+    Orden
+)
+
+# ======================================================
+# CONFIG OLLAMA
+# ======================================================
+OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = "phi"
+
+# CORREGIDO: Escape de llaves dobles
+AI_CONTRACT = """Devuelve SOLO un JSON válido.
+NO texto.
+NO markdown.
+
+Campos:
+accion, entidad, filtros, id, campo
+
+Ejemplo:
+{{"accion":"contar","entidad":"ordenes"}}
+
+Pregunta:
+{{pregunta}}"""
+
+# ======================================================
+# OLLAMA
+# ======================================================
+def consultar_ollama(prompt):
+    r = requests.post(
+        OLLAMA_URL,
+        json={
+            "model": OLLAMA_MODEL,
+            "prompt": prompt,
+            "stream": False,
+            "options": {"temperature": 0}
+        },
+        timeout=120
+    )
+    r.raise_for_status()
+    return r.json().get("response", "")
+
+# ======================================================
+# LIMPIEZA EXTREMA DE JSON - VERSIÓN MEJORADA
+# ======================================================
+def limpiar_claves(data):
+    limpio = {}
+    
+    # DEBUG: Ver qué recibimos
+    print(f"DEBUG limpiar_claves recibió: {data}")
+    
+    for k, v in data.items():
+        # Primero convertimos a string y limpiamos
+        key_str = str(k)
+        
+        # Quitamos TODAS las comillas al principio y al final
+        key_clean = key_str.strip().strip('"').strip("'").lower()
+        
+        # Mapeamos a nombres limpios
+        if key_clean in ['accion', 'action', 'acción']:
+            limpio['accion'] = v
+        elif key_clean in ['entidad', 'entity']:
+            limpio['entidad'] = v
+        elif key_clean in ['filtros', 'filters', 'filter']:
+            limpio['filtros'] = v
+        elif key_clean == 'id':
+            limpio['id'] = v
+        elif key_clean in ['campo', 'field']:
+            limpio['campo'] = v
+        else:
+            # Para cualquier otra clave, la guardamos limpia
+            limpio[key_clean] = v
+    
+    print(f"DEBUG limpiar_claves devuelve: {limpio}")
+    return limpio
+
+# ======================================================
+# INTERPRETAR PREGUNTA - VERSIÓN ROBUSTA
+# ======================================================
+def interpretar_pregunta(pregunta):
+    print(f"DEBUG interpretando pregunta: {pregunta}")
+    
+    # CORREGIDO: Usamos double braces en el template para evitar KeyError
+    prompt = AI_CONTRACT.format(pregunta=pregunta)
+    print(f"DEBUG prompt enviado a IA: {prompt}")
+    
+    raw = consultar_ollama(prompt)
+    print(f"DEBUG respuesta cruda de IA: {raw}")
+    
+    # Buscar JSON en la respuesta - versión más flexible
+    # Buscamos tanto { ... } como {{ ... }}
+    json_patterns = [
+        r'(\{\s*".*?"\s*\})',  # JSON normal
+        r'(\{\{.*?\}\})',      # JSON con double braces
+    ]
+    
+    json_str = None
+    for pattern in json_patterns:
+        match = re.search(pattern, raw, re.DOTALL)
+        if match:
+            json_str = match.group(1)
+            break
+    
+    if not json_str:
+        print(f"DEBUG no se encontró JSON en: {raw}")
+        return {"accion": None, "entidad": None}
+    
+    # Limpiar double braces si existen
+    if json_str.startswith('{{') and json_str.endswith('}}'):
+        json_str = json_str[1:-1]  # Remover un par de braces
+    
+    print(f"DEBUG JSON encontrado: {json_str}")
+    
+    try:
+        parsed = json.loads(json_str)
+        print(f"DEBUG JSON parseado: {parsed}")
+        return limpiar_claves(parsed)
+    except json.JSONDecodeError as e:
+        print(f"❌ Error decodificando JSON: {e}")
+        print(f"❌ JSON problemático: {json_str}")
+        
+        # Intentar arreglar JSON común mal formado
+        try:
+            # Reemplazar comillas simples por dobles
+            fixed = json_str.replace("'", '"')
+            # Escapar comillas dobles dentro
+            fixed = re.sub(r'(?<!\\)"', r'\"', fixed)
+            parsed = json.loads(fixed)
+            print(f"DEBUG JSON arreglado: {parsed}")
+            return limpiar_claves(parsed)
+        except Exception as e2:
+            print(f"❌ No se pudo arreglar JSON: {e2}")
+            
+            # Último intento: extraer valores manualmente
+            try:
+                accion_match = re.search(r'"accion"\s*:\s*"([^"]+)"', json_str, re.IGNORECASE)
+                entidad_match = re.search(r'"entidad"\s*:\s*"([^"]+)"', json_str, re.IGNORECASE)
+                
+                if accion_match and entidad_match:
+                    return {
+                        "accion": accion_match.group(1).lower(),
+                        "entidad": entidad_match.group(1).lower()
+                    }
+            except:
+                pass
+                
+            return {"accion": None, "entidad": None}
+    except Exception as e:
+        print(f"❌ Error inesperado en interpretar_pregunta: {e}")
+        return {"accion": None, "entidad": None}
+
+# ======================================================
+# MAPEOS
+# ======================================================
+ENTITY_MAP = {
+    "subestaciones": Subestacion,
+    "reconectadores": Reconectador,
+    "nodos": Nodo,
+    "comunicaciones": Comunicacion,
+    "ordenes": Orden,
+}
+
+FILTER_MAP = {
+    "estado": "estado",
+}
+
+# ======================================================
+# EJECUTOR ROBUSTO
+# ======================================================
+def ejecutar_accion(data):
+    print(f"DEBUG ejecutar_accion recibió: {data}")
+    
+    # Asegurarnos de que las claves existen
+    accion = data.get("accion")
+    entidad = data.get("entidad")
+    
+    if not accion or not entidad:
+        return f"No entendí la pregunta. Datos recibidos: {data}"
+
+    # Normalizar entidad a plural si es necesario
+    if entidad.endswith('es'):
+        # Ya está en plural
+        entidad_normalizada = entidad
+    elif entidad.endswith('s'):
+        # Singular terminado en s, agregamos 'es' si no está
+        if entidad + 'es' in ENTITY_MAP:
+            entidad_normalizada = entidad + 'es'
+        else:
+            entidad_normalizada = entidad
+    else:
+        # Singular normal, agregamos 's'
+        if entidad + 's' in ENTITY_MAP:
+            entidad_normalizada = entidad + 's'
+        elif entidad + 'es' in ENTITY_MAP:
+            entidad_normalizada = entidad + 'es'
+        else:
+            entidad_normalizada = entidad
+
+    if entidad_normalizada not in ENTITY_MAP:
+        return f"Entidad '{entidad}' no válida. Opciones: {list(ENTITY_MAP.keys())}"
+
+    qs = ENTITY_MAP[entidad_normalizada].objects.all()
+
+    filtros = data.get("filtros", {})
+    if isinstance(filtros, dict):
+        for k, v in filtros.items():
+            if k in FILTER_MAP:
+                qs = qs.filter(**{FILTER_MAP[k]: v})
+
+    if accion in ["contar", "count", "cuenta", "cuántos", "cuantas"]:
+        return f"Hay {qs.count()} {entidad_normalizada}."
+
+    if accion in ["listar", "list", "mostrar", "ver"]:
+        resultados = list(qs.values()[:10])
+        if not resultados:
+            return f"No hay {entidad_normalizada} disponibles."
+        return resultados
+
+    if accion in ["obtener", "get", "traer", "buscar"]:
+        obj_id = data.get("id")
+        if not obj_id:
+            return "Se necesita un ID para obtener un registro específico."
+        obj = qs.filter(pk=obj_id).first()
+        if not obj:
+            return "Registro no encontrado."
+        
+        campo = data.get("campo")
+        if not campo:
+            return "Se necesita especificar un campo."
+            
+        return getattr(obj, campo, f"Campo '{campo}' no encontrado")
+
+    return f"Acción '{accion}' no soportada. Acciones válidas: contar, listar, obtener"
+
+# ======================================================
+# VISTA FINAL - SUPER ROBUSTA
+# ======================================================
+@csrf_exempt
+def bot_preguntar_ia(request):
+    try:
+        print(f"DEBUG Nueva solicitud recibida")
+        
+        # Parsear cuerpo
+        body_str = request.body.decode('utf-8')
+        print(f"DEBUG cuerpo recibido: {body_str}")
+        
+        body = json.loads(body_str)
+        pregunta = body.get("pregunta", "").strip()
+        
+        print(f"DEBUG pregunta: {pregunta}")
+        
+        if not pregunta:
+            return JsonResponse({"respuesta": "Escribe una pregunta."})
+
+        # Obtener interpretación de la IA
+        data = interpretar_pregunta(pregunta)
+        print(f"DEBUG data final: {data}")
+
+        # Verificar que tenemos los campos mínimos
+        if "accion" not in data or "entidad" not in data:
+            # Intentar inferir directamente desde la pregunta
+            pregunta_lower = pregunta.lower()
+            
+            # Detección simple de intención
+            if any(word in pregunta_lower for word in ["cuántos", "cuántas", "cuantos", "cuantas", "cuenta", "total"]):
+                data["accion"] = "contar"
+            elif any(word in pregunta_lower for word in ["lista", "mostrar", "ver", "todos"]):
+                data["accion"] = "listar"
+            elif any(word in pregunta_lower for word in ["obtener", "buscar", "traer"]):
+                data["accion"] = "obtener"
+            else:
+                data["accion"] = "contar"  # Por defecto
+            
+            # Detección de entidad
+            for entidad_key in ENTITY_MAP.keys():
+                entidad_singular = entidad_key.rstrip('s').rstrip('es')
+                if entidad_key in pregunta_lower or entidad_singular in pregunta_lower:
+                    data["entidad"] = entidad_key
+                    break
+            
+            if "entidad" not in data:
+                return JsonResponse({
+                    "respuesta": f"No pude identificar de qué entidad hablas. Opciones: {list(ENTITY_MAP.keys())}"
+                })
+
+        # Ejecutar acción
+        respuesta = ejecutar_accion(data)
+        
+        return JsonResponse({
+            "respuesta": respuesta
+        })
+
+    except json.JSONDecodeError as e:
+        print(f"❌ ERROR JSONDecodeError: {e}")
+        return JsonResponse({
+            "respuesta": "Error: La solicitud debe ser un JSON válido con una 'pregunta'"
+        }, status=400)
+        
+    except Exception as e:
+        print(f"❌ ERROR BOT REAL: {repr(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        return JsonResponse({
+            "respuesta": f"Error interno del servidor: {str(e)[:100]}..."
+        }, status=500)    

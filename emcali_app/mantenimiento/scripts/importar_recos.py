@@ -15,7 +15,7 @@ from mantenimiento.models import Nodo, Reconectador
 
 def importar_recos():
     # Ruta al Excel
-    excel_path = os.path.join(BASE_DIR, "mantenimiento", "scripts", "nuevobd_MAURO24.xlsx")
+    excel_path = os.path.join(BASE_DIR, "mantenimiento", "scripts", "nuevo-recos1.xlsx")
     df = pd.read_excel(excel_path, sheet_name="Reco")
 
     # Limpiar nombres de columnas
