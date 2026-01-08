@@ -25,7 +25,7 @@ from mantenimiento.views import (
     filtrar_padres, crear_pregunta_padre, eliminar_pregunta_padre,
     historico_subestacion, pruebapotly, mapa_ordenes, grafico_fallas,
     historial_nodo, registrar_usuario, ver_ruta_nodo, solicitar_codigo,
-    verificar_codigo, cambiar_contrasena, dashboard_estadisticas_completo,buscar_nodos,data_total,reconectadores_por_subestacion_detalle,reconectadores_por_marca,reconectadores_por_circuito,comunicaciones_por_tecnologia,comunicaciones_por_estado,grafico_marca_reco_emcali,bot_preguntar_ia
+    verificar_codigo, cambiar_contrasena, dashboard_estadisticas_completo,buscar_nodos,data_total,reconectadores_por_subestacion_detalle,reconectadores_por_marca,reconectadores_por_circuito,comunicaciones_por_tecnologia,comunicaciones_por_estado,bot_preguntar_ia,descargar_backup_seleccionado
 )
 
 urlpatterns = [
@@ -110,7 +110,7 @@ urlpatterns = [
     path("verificar/", verificar_codigo, name="verificar_codigo"),
     path("cambiar/", cambiar_contrasena, name="cambiar_contrasena"),
     path('buscar-nodos/', buscar_nodos, name='buscar_nodos'),
-     path('dashboard/marca-reco-emcali/', grafico_marca_reco_emcali, name='marca_reco_emcali'),
+     
 
 
 
@@ -141,7 +141,8 @@ urlpatterns = [
         comunicaciones_por_estado,
         name="comu_por_estado"
     ),
-     path("bot/preguntar/", bot_preguntar_ia, name="bot_preguntar_ia")
+     path("bot/preguntar/", bot_preguntar_ia, name="bot_preguntar_ia"),
+     path("backup-excel/", descargar_backup_seleccionado, name="backup_excel"),
 ]
 
 # 🔥 SERVIR MEDIA EN PYTHONANYWHERE

@@ -1,16 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .forms import LoginForm
-from .forms import UsuarioRegistroForm
+from .forms import LoginForm,UsuarioRegistroForm
 from .models import Trabajador,CodigoRecuperacion
 from .decorators import role_required
 from django.core.mail import send_mail
-from django.contrib import messages
 import random
-
-from django.shortcuts import render
 from django.db.models import (
     Count,
     Avg,
@@ -21,13 +17,76 @@ from django.db.models import (
 from datetime import timedelta
 import plotly.graph_objects as go
 
+
+from django.contrib.admin.views.decorators import staff_member_required
+from .utils.exportar_excel import exportar_tablas_seleccionadas_excel
+from django.http import HttpResponse, JsonResponse
+from django.contrib import messages
+from django.db.models import Max, Count, Case, When, DateTimeField, Value, CharField, F,Q
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils.timezone import now
+from django.utils import timezone
+from django.utils.dateparse import parse_date
+from django.db.models.functions import Coalesce
+from django.urls import reverse
+from django.template.loader import get_template
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+import plotly.express as px
+from plotly.offline import plot
+from decimal import Decimal, InvalidOperation
+from datetime import datetime, time, timedelta
+import json
+import pandas as pd
+from xhtml2pdf import pisa
+from django.contrib.auth import logout
+from .forms import (
+    SubestacionForm,
+    SubestacionComuInformeForm,
+    NodoForm,
+    InformeRecoForm,
+    PreguntaForm,
+    OrdenSubestacionForm,
+    PreguntaPadreForm,
+    TresFotosForm
+)
+import json
+import re
+import requests
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
 from .models import (
+    Nodo,
     Reconectador,
     Comunicacion,
-    InformeReco,
+    Subestacion,
+    Trabajador,
     Orden,
-    Nodo
+    InformeReco,
+    ComentarioIngeniero,
+    Subestacion_comu_informe,
+    Historicosubcomu,
+    HistoricoReco,
+    ComponenteSubestacion,
+    RevisionSubestacion,
+    Pregunta,
+    Respuesta,
+    OrdenSubestacion,
+    PreguntaPadre,
+    HistoricoSubestacion,
+    FotoInformeReco,
+    Rol
 )
+from django.utils import timezone
+from datetime import timedelta
+
+from django.db.models import Count
+
+import pandas as pd
+from django.shortcuts import render
+from django.db.models import Q
 
 def volver_loguien(request):
     return(render, login_required)
@@ -64,67 +123,14 @@ def login_view(request):
 def ini(request):
     return render(request, 'inicio.html')
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, JsonResponse
-from django.contrib import messages
-from django.db.models import Max, Count, Case, When, DateTimeField, Value, CharField, F,Q
-from django.core.exceptions import ObjectDoesNotExist
-from django.utils.timezone import now
-from django.utils import timezone
-from django.utils.dateparse import parse_date
-from django.db.models.functions import Coalesce
-from django.urls import reverse
-from django.template.loader import get_template
-from django.core.serializers.json import DjangoJSONEncoder
-import json
-import plotly.express as px
-from plotly.offline import plot
-from decimal import Decimal, InvalidOperation
-from datetime import datetime, time, timedelta
-import json
-import pandas as pd
-from xhtml2pdf import pisa
-from django.contrib.auth import logout
+
 
 def logout_view(request):
     logout(request)
     
     return redirect('login')  # Te devuelve a la página de login
 # Formularios
-from .forms import (
-    SubestacionForm,
-    SubestacionComuInformeForm,
-    NodoForm,
-    InformeRecoForm,
-    PreguntaForm,
-    OrdenSubestacionForm,
-    PreguntaPadreForm,
-    TresFotosForm
-)
 
-# Modelos
-from .models import (
-    Nodo,
-    Reconectador,
-    Comunicacion,
-    Subestacion,
-    Trabajador,
-    Orden,
-    InformeReco,
-    ComentarioIngeniero,
-    Subestacion_comu_informe,
-    Historicosubcomu,
-    HistoricoReco,
-    ComponenteSubestacion,
-    RevisionSubestacion,
-    Pregunta,
-    Respuesta,
-    OrdenSubestacion,
-    PreguntaPadre,
-    HistoricoSubestacion,
-    FotoInformeReco,
-    Rol
-)
 
 @role_required('jefe')
 def mantenimiento(request):
@@ -480,12 +486,6 @@ def lista_ordenes(request):
     })
 
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
-from django.utils import timezone
-from datetime import timedelta
-from .models import Orden, Reconectador, InformeReco, FotoInformeReco
-from .forms import InformeRecoForm, TresFotosForm
 
 @role_required('operario')
 def crear_informe_reco(request, orden_id):
@@ -1974,13 +1974,10 @@ def historico_subestacion(request, subestacion_id):
 
 
 
-from django.shortcuts import render
-from django.urls import reverse
-from django.db.models import Count
-from .models import Reconectador, Comunicacion
+
 
 def pruebapotly(request):
-    import pandas as pd
+   
 
     # 1️⃣ Totales generales
     total_nodos = Reconectador.objects.values('id_nodo').distinct().count()
@@ -2737,9 +2734,7 @@ def cambiar_contrasena(request):
 
     return render(request, "cambiar_contrasena.html")
 
-from django.shortcuts import render
-from django.db.models import Q
-from .models import Nodo
+
 
 def buscar_nodos(request):
     nodos = None
@@ -2993,20 +2988,6 @@ def comunicaciones_por_estado(request, estado):
         "comunicaciones": comunicaciones
     })   
 
-import json
-import re
-import requests
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-
-from .models import (
-    Subestacion,
-    Reconectador,
-    Nodo,
-    Comunicacion,
-    Orden
-)
 
 # ======================================================
 # CONFIG OLLAMA
@@ -3309,3 +3290,6 @@ def bot_preguntar_ia(request):
         return JsonResponse({
             "respuesta": f"Error interno del servidor: {str(e)[:100]}..."
         }, status=500)    
+
+def descargar_backup_seleccionado(request):
+    return exportar_tablas_seleccionadas_excel()                
