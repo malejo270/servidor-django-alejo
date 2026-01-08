@@ -23,7 +23,7 @@
     color: white;
   }
 
-  /* ✔ NUEVO BOTÓN VERDE EMCALI */
+  /* BOTÓN VERDE EMCALI */
   .hhh {
     background-color: #43B02A !important;
     color: white !important;
@@ -54,18 +54,27 @@
   </div>
   {% endif %}
 
-  <!-- Filtros -->
+  <!-- BOTONES + FILTROS -->
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
 
-    <!-- ✔ BOTÓN ARREGLADO -->
+    <!-- Crear orden -->
     <a href="{% url 'crear_orden' %}" class="hhh">
       <i class="bi bi-plus-lg"></i> Crear Orden
     </a>
 
-    <div class="position-relative">
-      <button type="button" class="btn btn-secondary fw-bold" id="btn-filtro" onclick="toggleFiltros()">🔍 Filtros</button>
+    <!-- Descargar backup -->
+    <a href="{% url 'backup_excel' %}" class="hhh">
+      <i class="bi bi-download"></i> Descargar Backup
+    </a>
 
-      <div id="filtros-panel" class="card p-3 shadow position-absolute end-0 mt-2" style="width: 300px; display: none; z-index: 100;">
+    <!-- Filtros -->
+    <div class="position-relative">
+      <button type="button" class="btn btn-secondary fw-bold" id="btn-filtro" onclick="toggleFiltros()">
+        🔍 Filtros
+      </button>
+
+      <div id="filtros-panel" class="card p-3 shadow position-absolute end-0 mt-2"
+           style="width: 300px; display: none; z-index: 100;">
         <form method="get" class="d-flex flex-column gap-3">
           <div>
             <label class="fw-bold">Fecha inicio</label>
@@ -87,7 +96,9 @@
             <select name="estado" class="form-select">
               <option value="todos" {% if estado == "todos" %}selected{% endif %}>Todos</option>
               {% for value, label in estados %}
-                <option value="{{ value }}" {% if estado == value %}selected{% endif %}>{{ label }}</option>
+                <option value="{{ value }}" {% if estado == value %}selected{% endif %}>
+                  {{ label }}
+                </option>
               {% endfor %}
             </select>
           </div>
@@ -96,7 +107,9 @@
             <select name="tipo" class="form-select">
               <option value="todos" {% if tipo == "todos" %}selected{% endif %}>Todos</option>
               {% for value, label in tipos %}
-                <option value="{{ value }}" {% if tipo == value %}selected{% endif %}>{{ label }}</option>
+                <option value="{{ value }}" {% if tipo == value %}selected{% endif %}>
+                  {{ label }}
+                </option>
               {% endfor %}
             </select>
           </div>
@@ -109,7 +122,7 @@
     </div>
   </div>
 
-  <!-- Tabla -->
+  <!-- TABLA -->
   <div class="table-responsive">
     <table class="table table-bordered table-hover align-middle text-center">
       <thead class="hola">
@@ -141,14 +154,18 @@
           <td>
             {% if orden.tipo == "reco" %}
               {% if orden.informe_reco %}
-                <a href="{% url 'ver_informe_reco' orden.id %}" class="btn btn-primary btn-sm">🔍 Ver Informe</a>
+                <a href="{% url 'ver_informe_reco' orden.id %}" class="btn btn-primary btn-sm">
+                  🔍 Ver Informe
+                </a>
               {% else %}
                 <button class="btn btn-secondary btn-sm disabled">🔍 Ver Informe</button>
               {% endif %}
             {% elif orden.tipo == "subestacion" %}
               {% with informe=orden.subestacion_comu_informe_set.first %}
                 {% if informe %}
-                  <a href="{% url 'ver_informe_sub_comu' orden.id %}" class="btn btn-primary btn-sm">🔍 Ver Informe</a>
+                  <a href="{% url 'ver_informe_sub_comu' orden.id %}" class="btn btn-primary btn-sm">
+                    🔍 Ver Informe
+                  </a>
                 {% else %}
                   <button class="btn btn-secondary btn-sm disabled">🔍 Ver Informe</button>
                 {% endif %}
@@ -160,7 +177,9 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="6" class="text-center py-4 text-muted">No hay órdenes registradas.</td>
+          <td colspan="6" class="text-center py-4 text-muted">
+            No hay órdenes registradas.
+          </td>
         </tr>
         {% endfor %}
       </tbody>
@@ -173,6 +192,7 @@ function toggleFiltros() {
   const panel = document.getElementById("filtros-panel");
   panel.style.display = (panel.style.display === "none" || panel.style.display === "") ? "block" : "none";
 }
+
 document.addEventListener("click", function(event) {
   const panel = document.getElementById("filtros-panel");
   const boton = document.getElementById("btn-filtro");
@@ -180,6 +200,7 @@ document.addEventListener("click", function(event) {
     panel.style.display = "none";
   }
 });
+
 setTimeout(() => {
   const alertas = document.getElementById("alertas");
   if (alertas) {
